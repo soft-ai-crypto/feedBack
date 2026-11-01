@@ -47,25 +47,25 @@ RUN cmake -S /tmp/vgmstream -B /tmp/vgmstream/build \
 # and update FFMPEG_RELEASE + both SHA256 ARGs below.
 FROM alpine:3.20 AS ffmpeg-fetcher
 ARG TARGETARCH
-ARG FFMPEG_RELEASE=autobuild-2026-07-03-13-21
-ARG FFMPEG_BUILD_AMD64=ffmpeg-n7.1.5-1-g7d0e842004-linux64-gpl-7.1.tar.xz
-ARG FFMPEG_BUILD_ARM64=ffmpeg-n7.1.5-1-g7d0e842004-linuxarm64-gpl-7.1.tar.xz
-ARG FFMPEG_SHA256_AMD64=1390e1c320a1e38dae106d6d0b05a6f08eb8b30f732bc1aa0d45a4aa17f13795
-ARG FFMPEG_SHA256_ARM64=53b2e30df04d56932b7782234c9bc97abfe0bb242192ca50346474a41b100ab0
+# BtbN deletes dated autobuild-* tags; `latest` keeps stable filenames.
+ARG FFMPEG_RELEASE=latest
+ARG FFMPEG_BUILD_AMD64=ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz
+ARG FFMPEG_BUILD_ARM64=ffmpeg-n8.1-latest-linuxarm64-gpl-8.1.tar.xz
 RUN apk add --no-cache curl xz \
     && arch="${TARGETARCH:-$(apk --print-arch)}" \
     && case "$arch" in \
-         arm64|aarch64) FFMPEG_TARBALL="${FFMPEG_BUILD_ARM64}"; FFMPEG_SHA256="${FFMPEG_SHA256_ARM64}" ;; \
-         amd64|x86_64)  FFMPEG_TARBALL="${FFMPEG_BUILD_AMD64}"; FFMPEG_SHA256="${FFMPEG_SHA256_AMD64}" ;; \
+         arm64|aarch64) FFMPEG_TARBALL="${FFMPEG_BUILD_ARM64}" ;; \
+         amd64|x86_64)  FFMPEG_TARBALL="${FFMPEG_BUILD_AMD64}" ;; \
          *) echo "Unsupported arch: $arch" >&2; exit 1 ;; \
        esac \
-    && curl -fsSL "https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_RELEASE}/${FFMPEG_TARBALL}" -o /tmp/ffmpeg.tar.xz \
-    && echo "${FFMPEG_SHA256}  /tmp/ffmpeg.tar.xz" | sha256sum -c - \
+    && curl -fsSL "https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_RELEASE}/checksums.sha256" -o /tmp/checksums.sha256 \
+    && curl -fsSL "https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_RELEASE}/${FFMPEG_TARBALL}" -o "/tmp/${FFMPEG_TARBALL}" \
+    && grep " ${FFMPEG_TARBALL}$" /tmp/checksums.sha256 | (cd /tmp && sha256sum -c -) \
     && mkdir -p /tmp/ffmpeg-extract /out \
-    && tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/ffmpeg-extract --strip-components=1 \
+    && tar -xJf "/tmp/${FFMPEG_TARBALL}" -C /tmp/ffmpeg-extract --strip-components=1 \
     && cp /tmp/ffmpeg-extract/bin/ffmpeg /tmp/ffmpeg-extract/bin/ffprobe /out/ \
     && cp /tmp/ffmpeg-extract/LICENSE.txt /out/LICENSE.txt \
-    && rm -rf /tmp/ffmpeg-extract /tmp/ffmpeg.tar.xz
+    && rm -rf /tmp/ffmpeg-extract "/tmp/${FFMPEG_TARBALL}" /tmp/checksums.sha256
 
 # ── Stage 1d: Build the Tailwind stylesheet over the FULL plugin set ──────
 # The committed static/tailwind.min.css is generated against only the in-tree
@@ -94,9 +94,9 @@ FROM python:3.12-slim
 # Re-declare the ffmpeg ARGs so their values are available to LABEL below.
 # ARG values don't cross stage boundaries in multi-stage builds; defaults
 # must be repeated here to take effect when no --build-arg is supplied.
-ARG FFMPEG_RELEASE=autobuild-2026-07-03-13-21
-ARG FFMPEG_BUILD_AMD64=ffmpeg-n7.1.5-1-g7d0e842004-linux64-gpl-7.1.tar.xz
-ARG FFMPEG_BUILD_ARM64=ffmpeg-n7.1.5-1-g7d0e842004-linuxarm64-gpl-7.1.tar.xz
+ARG FFMPEG_RELEASE=latest
+ARG FFMPEG_BUILD_AMD64=ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz
+ARG FFMPEG_BUILD_ARM64=ffmpeg-n8.1-latest-linuxarm64-gpl-8.1.tar.xz
 
 # Apply latest security updates to base packages (clears glibc deb13u3 and
 # similar). Done first so any subsequent installs resolve against the
