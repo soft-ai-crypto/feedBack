@@ -783,6 +783,7 @@
     const FRET_SCALE = SCALE * 1.1;
 
     const NFRETS = 24;
+    const NFRETS_CARNATIC_MANDOLIN = 15;
     const NSTR = 6;
     /**
      * Pure 12-semitone spacing compresses toward the bridge; multiply each
@@ -812,6 +813,15 @@
         return /bass/i.test(bundle?.songInfo?.arrangement || '') ? 4 : NSTR;
     }
 
+    // Guitar/bass keep the 24-fret neck. Carnatic Mandolin stops at 15.
+    // Spacing math (_fretXUniStep, fretX) still uses NFRETS=24 so fret 12
+    // stays at the same world X; only wires/labels/board extent shorten.
+    function resolveNFrets(bundle) {
+        const arrangement = bundle?.songInfo?.arrangement || '';
+        if (/carnatic\s+mandolin/i.test(arrangement)) return NFRETS_CARNATIC_MANDOLIN;
+        return NFRETS;
+    }
+
     /** Chart-format tuning entries are semitone offsets from instrument standard. */
     const _NOTE_NAMES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -822,8 +832,13 @@
     const _BASE_OPEN_MIDI_GUITAR7 = Object.freeze([35, 40, 45, 50, 55, 59, 64]);
     // F#/B/E standard extension — low string is a fifth below RS 7‑string low B.
     const _BASE_OPEN_MIDI_GUITAR8 = Object.freeze([28, 35, 40, 45, 50, 55, 59, 64]);
+    // C#3 G#3 C#4 G#4 C#5. Not the low five of guitar, and not bass-5.
+    const _BASE_OPEN_MIDI_CARNATIC_MANDOLIN = Object.freeze([49, 56, 61, 68, 73]);
 
     function _baseOpenStringMidis(sc, arrangement) {
+        if (/carnatic\s+mandolin/i.test(arrangement || '')) {
+            return _BASE_OPEN_MIDI_CARNATIC_MANDOLIN.slice();
+        }
         const isBass = /bass/i.test(arrangement || '');
         if (sc === 4 && isBass) return _BASE_OPEN_MIDI_BASS4.slice();
         if (sc === 4) return _BASE_OPEN_MIDI_GUITAR6.slice(0, 4);
@@ -1376,7 +1391,7 @@
     }
 
     /** @returns {{ dMin: number, dMax: number } | null} */
-    function laneBoundsFromAnchor(anc) {
+    function laneBoundsFromAnchor(anc, maxFret) {
         if (!anc) return null;
         let fStart = Math.round(Number(anc.fret));
         // Match anchorPlayedFretInclusiveSpan(): fret 0 (and below) clamps
@@ -1387,16 +1402,17 @@
         let w = Number(anc.width);
         if (!Number.isFinite(w)) w = 4;
         w = Math.max(1, Math.round(w));
-        const fLast = Math.min(NFRETS, fStart + w - 1);
+        const cap = Number.isFinite(maxFret) ? maxFret : NFRETS;
+        const fLast = Math.min(cap, fStart + w - 1);
         const dMin = Math.max(0, fStart - 1);
-        const dMax = Math.min(NFRETS, fLast);
+        const dMax = Math.min(cap, fLast);
         return { dMin, dMax };
     }
 
     /** Same horizontal span as the dynamic highway lane: anchor at chart time `t`. */
-    function anchorLaneBoundsAt(anchorArr, t) {
+    function anchorLaneBoundsAt(anchorArr, t, maxFret) {
         if (!anchorArr || !anchorArr.length) return null;
-        return laneBoundsFromAnchor(getChartAnchorAt(anchorArr, t));
+        return laneBoundsFromAnchor(getChartAnchorAt(anchorArr, t), maxFret);
     }
 
     /**
@@ -1405,20 +1421,21 @@
      * (diagram wire span), these are the labels shown on gems / row numbers.
      * @returns {{ f0: number, f1: number } | null}
      */
-    function anchorPlayedFretInclusiveSpan(anc) {
+    function anchorPlayedFretInclusiveSpan(anc, maxFret) {
         if (!anc) return null;
         let f0 = Math.round(Number(anc.fret));
         if (!Number.isFinite(f0) || f0 < 1) f0 = 1;
         let w = Number(anc.width);
         if (!Number.isFinite(w)) w = 4;
         w = Math.max(1, Math.round(w));
-        const f1 = Math.min(NFRETS, f0 + w - 1);
+        const cap = Number.isFinite(maxFret) ? maxFret : NFRETS;
+        const f1 = Math.min(cap, f0 + w - 1);
         return { f0, f1 };
     }
 
-    function anchorPlayedFretSpanAt(anchorArr, t) {
+    function anchorPlayedFretSpanAt(anchorArr, t, maxFret) {
         if (!anchorArr || !anchorArr.length) return null;
-        return anchorPlayedFretInclusiveSpan(getChartAnchorAt(anchorArr, t));
+        return anchorPlayedFretInclusiveSpan(getChartAnchorAt(anchorArr, t), maxFret);
     }
 
     const FRET_COOLDOWN = 0.5; // seconds a lane fret stays active after last note
@@ -5192,6 +5209,8 @@
         // Active string count for the current arrangement (resolved each
         // frame from bundle.stringCount and clamped to MAX_RENDER_STRINGS).
         let nStr = NSTR;
+        // Per-arrangement neck length (24 guitar/bass, 15 Carnatic Mandolin).
+        let nFrets = NFRETS;
         // Set true once a chart with out-of-range s indices has triggered
         // its warning. Reset only on teardown or when nStr changes (e.g.
         // arrangement switch from guitar to bass) — same-nStr songs share
@@ -5364,7 +5383,7 @@
         const xFretMid = f => (_leftyCached ? -fretMid(f) : fretMid(f));
         const boardSpanX = () => {
             const x0 = xFret(0);
-            const xN = xFret(NFRETS);
+            const xN = xFret(nFrets);
             return {
                 min: Math.min(x0, xN),
                 max: Math.max(x0, xN),
@@ -9367,7 +9386,7 @@
             const nutRearX = nutXC - nutLenX * 0.5;
             const nutFrontX = nutXC + nutLenX * 0.5;
             const nutJoinX = nutFrontX + 0.03 * K;
-            const bridgeTipX = xFret(NFRETS) + 2 * K * mir;
+            const bridgeTipX = xFret(nFrets) + 2 * K * mir;
             boardStringStartX = Math.min(nutJoinX, bridgeTipX);
             boardTuningLabelX = (nutRearX + xHeadLeft) * 0.5 - 0.15 * K * mir;
             const stringEndX = Math.max(nutJoinX, bridgeTipX);
@@ -9561,7 +9580,7 @@
             fretTubeGeo = new T.TubeGeometry(
                 tubeCurve, FRET_TUBE_SEG, FRET_TUBE_RADIUS, FRET_TUBE_RADIAL, false,
             );
-            for (let f = 0; f <= NFRETS; f++) {
+            for (let f = 0; f <= nFrets; f++) {
                 const x = xFret(f);
                 const mat = new T.MeshStandardMaterial({
                     color: FRET_WIRE_IDLE_HEX, metalness: FRET_METALNESS, roughness: FRET_ROUGHNESS,
@@ -9604,6 +9623,7 @@
                 fretG.add(d);
             };
             for (const f of DOTS) {
+                if (f > nFrets) continue;
                 const cx = xFretMid(f);
                 if (DDOTS.has(f)) {
                     addDot(cx, my - S_GAP * 0.7);
@@ -9626,6 +9646,7 @@
             _inlayMats = [];
             _inlayLabels = [];
             for (const f of INLAY_LABEL_FRETS) {
+                if (f > nFrets) continue;
                 const mat = txtMat(f, '#7abfcc', false, 'fretRow').clone();
                 mat.depthWrite = false;
                 mat.opacity = 0.55;
@@ -9735,7 +9756,7 @@
                     let w = Number(a.width);
                     if (!Number.isFinite(w)) w = 4;
                     w = Math.max(1, Math.round(w));
-                    const fHi = Math.min(NFRETS, fStart + w - 1);
+                    const fHi = Math.min(nFrets, fStart + w - 1);
                     minF = Math.min(minF, fStart);
                     maxF = Math.max(maxF, fHi);
                     any = true;
@@ -9775,7 +9796,7 @@
         function lookaheadTargetWorldX(minF, maxF) {
             const wb = CAM_FRET_EDGE_BLEND;
             const middle = (xFretMid(minF) + xFretMid(maxF)) * 0.5;
-            const weighted = 0.6 * xFret(0) + 0.4 * xFret(NFRETS);
+            const weighted = 0.6 * xFret(0) + 0.4 * xFret(nFrets);
             return middle * (1 - wb) + weighted * wb;
         }
 
@@ -11219,10 +11240,10 @@
             // e.g. { fret:3, width:4 } → dMin=2, dMax=6 → wires 2,3,4,5,6 gold.
             if (fretWireMats.length) {
                 const _fwBounds = anchors && anchors.length
-                    ? anchorLaneBoundsAt(anchors, now) : null;
+                    ? anchorLaneBoundsAt(anchors, now, nFrets) : null;
                 const _fwMin = _fwBounds ? _fwBounds.dMin : -1;
                 const _fwMax = _fwBounds ? _fwBounds.dMax : -1;
-                for (let _f = 0; _f <= NFRETS; _f++) {
+                for (let _f = 0; _f <= nFrets; _f++) {
                     const _m = fretWireMats[_f];
                     if (!_m) continue;
                     if (_fwMin >= 0 && _f >= _fwMin && _f <= _fwMax) {
@@ -11248,7 +11269,7 @@
             // or default 4-fret window when chart has no anchor at t).
             const padChordOpenX = NW * 0.4;
             const openNoteLaneBoxW = chartTime => {
-                const chAncB = anchorLaneBoundsAt(anchors, chartTime);
+                const chAncB = anchorLaneBoundsAt(anchors, chartTime, nFrets);
                 if (chAncB) {
                     const xl = fretX(chAncB.dMin);
                     const xr = fretX(chAncB.dMax);
@@ -11599,7 +11620,7 @@
             _scrActiveFrets.clear();
             const activeFrets = _scrActiveFrets;
             let highwayIntensity = 0;
-            for (let f = 1; f <= NFRETS; f++) {
+            for (let f = 1; f <= nFrets; f++) {
                 if (now - fretLastActiveTime[f] < FRET_COOLDOWN) activeFrets.add(f);
             }
 
@@ -11866,7 +11887,7 @@
                     const skipLabel = false;
                     let singleOpenX;
                     if (n.f === 0) {
-                        const ab = anchorLaneBoundsAt(anchors, n.t);
+                        const ab = anchorLaneBoundsAt(anchors, n.t, nFrets);
                         if (ab) singleOpenX = (xFret(ab.dMin) + xFret(ab.dMax)) / 2;
                     }
                     const singleOpenLaneW = n.f === 0 ? openNoteLaneBoxW(n.t) : undefined;
@@ -11905,7 +11926,7 @@
                                 // position stays fixed throughout the arpeggio even when
                                 // the chart anchor changes mid-pattern.
                                 const _arpBrktAncB = n.f === 0
-                                    ? anchorLaneBoundsAt(anchors, _arpBounds.start)
+                                    ? anchorLaneBoundsAt(anchors, _arpBounds.start, nFrets)
                                     : null;
                                 const _bx = n.f === 0
                                     ? (_arpBrktAncB
@@ -12095,7 +12116,7 @@
                     const _chAnchorT = chDtEarly > 0 ? ch.t
                         : (maxSus > 0 && now < ch.t + maxSus) ? ch.t
                         : now;
-                    const chAncB = anchorLaneBoundsAt(anchors, _chAnchorT);
+                    const chAncB = anchorLaneBoundsAt(anchors, _chAnchorT, nFrets);
                     // Open-string X: chart <anchor> lane centre when present (not curX /
                     // fretted centroid), matching highway span.
                     let chordCX = curX;
@@ -12495,7 +12516,7 @@
                             // Open-string bracket X: anchor at handshape start so
                             // position stays fixed even when chordCX drifts with now.
                             const _arpChBrktAncB = !isNaN(_hsStartT)
-                                ? anchorLaneBoundsAt(anchors, _hsStartT)
+                                ? anchorLaneBoundsAt(anchors, _hsStartT, nFrets)
                                 : null;
                             const _arpChBrktOpenX = _arpChBrktAncB
                                 ? (xFret(_arpChBrktAncB.dMin) + xFret(_arpChBrktAncB.dMax)) / 2
@@ -13219,13 +13240,13 @@
                     const _fwA = Math.max(_fwE.a, _fwE.openA);
                     if (_fwA <= 0) continue;
                     let _w0 = -1, _w1 = -1;
-                    const _fwB = anchorLaneBoundsAt(_drawAnchors, _fwE.t);
+                    const _fwB = anchorLaneBoundsAt(_drawAnchors, _fwE.t, nFrets);
                     if (_fwB) {
                         _w0 = _fwB.dMin;
                         _w1 = _fwB.dMax;
                     } else if (_fwE.maxF >= _fwE.minF) {
                         _w0 = Math.max(0, _fwE.minF - 1);
-                        _w1 = Math.min(NFRETS, _fwE.maxF);
+                        _w1 = Math.min(nFrets, _fwE.maxF);
                     }
                     if (_w0 < 0) continue; // all-open chord on an anchor-less chart
                     if (_fwA > _fwHitIn[_w0]) _fwHitIn[_w0] = _fwA;
@@ -13248,7 +13269,7 @@
                 // their materials each frame), so the bracket tightens naturally
                 // as outer tails expire.
                 let _fwLo = -1, _fwHi = -1;
-                for (let _f = 0; _f <= NFRETS; _f++) {
+                for (let _f = 0; _f <= nFrets; _f++) {
                     const _g = Math.max(_fwHitIn[_f], _fwHitGlow[_f] * _fwDecay);
                     _fwHitGlow[_f] = _g;
                     if (_g < 0.004) continue;   // below perceptible
@@ -13289,7 +13310,7 @@
                 const boardY = S_BASE - NH / 2 - 2 * K;
 
                 if (hasChartAnchors) {
-                    const nearB = laneBoundsFromAnchor(getChartAnchorAt(anchors, now));
+                    const nearB = laneBoundsFromAnchor(getChartAnchorAt(anchors, now), nFrets);
                     if (nearB) {
                         hwyLaneFretClipMin = nearB.dMin;
                         hwyLaneFretClipMax = nearB.dMax;
@@ -13310,7 +13331,7 @@
                         const dt0 = k * sliceDt;
                         const dt1 = (k + 1) * sliceDt;
                         const tC = now + (dt0 + dt1) * 0.5 - BEHIND;
-                        const b = laneBoundsFromAnchor(getChartAnchorAt(anchors, tC));
+                        const b = laneBoundsFromAnchor(getChartAnchorAt(anchors, tC), nFrets);
                         if (!b) continue;
                         // The lane STOPS AT THE HIT LINE (z = 0) — issue #991. The
                         // slice window starts BEHIND seconds in the past, so the
@@ -13452,8 +13473,8 @@
                     if (span > HWY_LANE_SPAN) {
                         dMin = Math.round((dMin + dMax - HWY_LANE_SPAN) / 2);
                         dMax = dMin + HWY_LANE_SPAN;
-                        if (dMax > NFRETS) {
-                            dMax = NFRETS;
+                        if (dMax > nFrets) {
+                            dMax = nFrets;
                             dMin = dMax - HWY_LANE_SPAN;
                         }
                         if (dMin < 0) {
@@ -13462,7 +13483,7 @@
                         }
                     } else if (span < HWY_LANE_SPAN) {
                         const need = HWY_LANE_SPAN - span;
-                        dMax = Math.min(NFRETS, dMax + need);
+                        dMax = Math.min(nFrets, dMax + need);
                         if (dMax - dMin < HWY_LANE_SPAN) {
                             dMin = Math.max(0, dMin - (HWY_LANE_SPAN - (dMax - dMin)));
                         }
@@ -13538,7 +13559,7 @@
                     const extZMid = -extLaneLen / 2;
                     const extYPos = boardY + 0.03 * K;
                     mLaneDividerExt.opacity = Math.max(0.3, 0.3 + highwayIntensity * 0.15);
-                    for (let f = 0; f <= NFRETS; f++) {
+                    for (let f = 0; f <= nFrets; f++) {
                         const div = pLaneDivider.get();
                         div.position.set(xFret(f), extYPos, extZMid);
                         div.material = mLaneDividerExt;
@@ -13571,8 +13592,8 @@
                 const yBottom = Math.min(sY(0), sY(nStr - 1));
                 // anchorSpan: [f0, f1] = [anchor.fret, anchor.fret + width - 1]
                 // e.g. { fret:3, width:4 } → f0=3, f1=6 → frets 3,4,5,6 gold.
-                const anchorSpan = anchorPlayedFretSpanAt(anchors, now);
-                for (let f = 1; f <= NFRETS; f++) {
+                const anchorSpan = anchorPlayedFretSpanAt(anchors, now, nFrets);
+                for (let f = 1; f <= nFrets; f++) {
                     const isInAnchor = anchorSpan
                         && f >= anchorSpan.f0 && f <= anchorSpan.f1;
                     const isMainFret = DOTS.includes(f);
@@ -14532,14 +14553,14 @@
                         _fwE = { minF: Infinity, maxF: -Infinity, a: 0, openA: 0, t: n.t };
                         _fwChordAcc.set(_fwK, _fwE);
                     }
-                    if (n.f > 0 && n.f <= NFRETS) {
+                    if (n.f > 0 && n.f <= nFrets) {
                         if (_fwA > _fwE.a) _fwE.a = _fwA;
                         if (n.f < _fwE.minF) _fwE.minF = n.f;
                         if (n.f > _fwE.maxF) _fwE.maxF = n.f;
                     } else if (n.f === 0 && _fwA > _fwE.openA) {
                         _fwE.openA = _fwA;   // open strings in the chord → lane edges
                     }
-                } else if (n.f > 0 && n.f <= NFRETS) {
+                } else if (n.f > 0 && n.f <= nFrets) {
                     if (_fwA > _fwHitIn[n.f - 1]) _fwHitIn[n.f - 1] = _fwA;
                     if (_fwA > _fwHitIn[n.f]) _fwHitIn[n.f] = _fwA;
                 } else if (n.f === 0) {
@@ -14547,7 +14568,7 @@
                     // slab's width is derived (openNoteLaneBoxW(n.t)) — so the
                     // flashed wires are the ones the slab is actually drawn
                     // between, even if the lane has since moved.
-                    const _fwB = anchorLaneBoundsAt(_drawAnchors, n.t);
+                    const _fwB = anchorLaneBoundsAt(_drawAnchors, n.t, nFrets);
                     if (_fwB) {
                         if (_fwA > _fwHitIn[_fwB.dMin]) _fwHitIn[_fwB.dMin] = _fwA;
                         if (_fwA > _fwHitIn[_fwB.dMax]) _fwHitIn[_fwB.dMax] = _fwA;
@@ -16053,7 +16074,7 @@
             pFretColMarker = null;
             _fretMarkerWaveCache.clear();
             gNote = gSus = gBeat = gTapChevron = null;
-            tgtX = curX = xFretMid(CAM_LOCK_CENTER_FRET); tgtDist = curDist = CAM_DIST_BASE; tgtLookY = curLookY = 0; _fretRowFitBoost = 1; nStr = NSTR; _oobStringWarned = false;
+            tgtX = curX = xFretMid(CAM_LOCK_CENTER_FRET); tgtDist = curDist = CAM_DIST_BASE; tgtLookY = curLookY = 0; _fretRowFitBoost = 1; nStr = NSTR; nFrets = NFRETS; _oobStringWarned = false;
             _lookaheadCamX = xFretMid(CAM_LOCK_CENTER_FRET);
             _lookaheadFretSpan = DEFAULT_LOOKAHEAD_FRET_SPAN;
             _lookaheadCamPrevNow = null;
@@ -16149,6 +16170,7 @@
                     }
                     try {
                         nStr = resolveStringCount(bundle);
+                        nFrets = resolveNFrets(bundle);
                         _invertedForBoard = _invertedCached;
                         _leftyForBoard = _leftyCached;
                         if (!initScene()) { _unsubscribeFocus(); _rejectReady(new Error('initScene failed')); return; }
@@ -16245,9 +16267,10 @@
                 _invertedCached = !!bundle.inverted;
                 _leftyCached = !!bundle.lefty;
                 const newNStr = resolveStringCount(bundle);
+                const newNFrets = resolveNFrets(bundle);
                 const newScale = bundle.renderScale || 1;
                 const leftyChanged = _leftyCached !== _leftyForBoard;
-                if (_invertedCached !== _invertedForBoard || leftyChanged || newNStr !== nStr) {
+                if (_invertedCached !== _invertedForBoard || leftyChanged || newNStr !== nStr || newNFrets !== nFrets) {
                     if (newNStr !== nStr) {
                         _oobStringWarned = false;
                         // Drop chord caches computed under the old string count
@@ -16261,6 +16284,7 @@
                         _lookaheadCamX = -_lookaheadCamX;
                     }
                     nStr = newNStr;
+                    nFrets = newNFrets;
                     buildBoard();
                     _invertedForBoard = _invertedCached;
                     _leftyForBoard = _leftyCached;

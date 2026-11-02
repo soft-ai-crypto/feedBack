@@ -406,6 +406,17 @@ function createHighway() {
     // When playing low frets, zoom in (fewer frets visible, bigger notes).
     // When playing high frets, zoom out (more frets visible, smaller spacing).
     hwState.displayMaxFret = 12;  // rightmost visible fret (smoothed)
+    // Carnatic Mandolin necks stop at fret 15. Guitar/bass keep the
+    // unbounded zoom (anchors can still push the 2D board past 15).
+    const CARNATIC_MANDOLIN_MAX_FRET = 15;
+    function boardMaxFret() {
+        const arr = (hwState.songInfo && hwState.songInfo.arrangement) || '';
+        return /carnatic\s+mandolin/i.test(arr) ? CARNATIC_MANDOLIN_MAX_FRET : null;
+    }
+    function capBoardFret(fret) {
+        const cap = boardMaxFret();
+        return cap == null ? fret : Math.min(fret, cap);
+    }
 
     function getAnchorAt(t) {
         // Same master-difficulty fallback as the render loops — the
@@ -449,7 +460,7 @@ function createHighway() {
         const lookAheadMax = getMaxFretInWindow(hwState.currentTime);
         const currentMax = anchor.fret + anchor.width;
         const needed = Math.max(currentMax, lookAheadMax);
-        const targetMax = Math.max(needed + 3, 8);
+        const targetMax = capBoardFret(Math.max(needed + 3, 8));
         hwState.displayMaxFret += (targetMax - hwState.displayMaxFret) * rate;
     }
 
@@ -1340,7 +1351,7 @@ function createHighway() {
     function drawFretLines(W, H) {
         const pad = 3;
         const lo = 0;
-        const hi = Math.ceil(hwState.displayMaxFret);
+        const hi = capBoardFret(Math.ceil(hwState.displayMaxFret));
         hwState.ctx.strokeStyle = '#2d2d45';
         hwState.ctx.lineWidth = 1;
 
@@ -1434,7 +1445,7 @@ function createHighway() {
         const y = H * 0.97;
         const pad = 3;
         const lo = 0;
-        const hi = Math.ceil(hwState.displayMaxFret);
+        const hi = capBoardFret(Math.ceil(hwState.displayMaxFret));
         const anchor = getAnchorAt(hwState.currentTime);
 
         hwState.ctx.font = 'bold 20px sans-serif';
@@ -1952,6 +1963,7 @@ function createHighway() {
                                 hasNotation: Boolean(msg.has_notation),
                                 hasDrumTab: Boolean(msg.has_drum_tab),
                             });
+                            hwState.displayMaxFret = capBoardFret(hwState.displayMaxFret);
                             _reportAudioSessionStart(msg);
                             {
                                 const parsedOffset = Number(msg.offset);
@@ -2016,15 +2028,20 @@ function createHighway() {
 
                                 const hudTuningEl = document.getElementById('hud-tuning');
                                 const hudTargetsEl = document.getElementById('hud-tuning-targets');
-                                const tuningLabel = (typeof window.displayTuningName === 'function')
+                                const isCarnaticMandolin = /carnatic\s+mandolin/i.test(msg.arrangement || '');
+                                let tuningLabel = (typeof window.displayTuningName === 'function')
                                     ? window.displayTuningName(null, msg.tuning)
                                     : '';
+                                if (isCarnaticMandolin && Array.isArray(msg.tuning) && msg.tuning.length
+                                        && msg.tuning.every((o) => Number(o) === 0)) {
+                                    tuningLabel = 'Standard';
+                                }
                                 if (hudTuningEl) {
                                     hudTuningEl.textContent = tuningLabel ? ('Tuning: ' + tuningLabel) : '';
                                 }
                                 if (hudTargetsEl) {
                                     let targetsText = '';
-                                    if (tuningLabel === 'Custom Tuning'
+                                    if ((tuningLabel === 'Custom Tuning' || isCarnaticMandolin)
                                             && Array.isArray(msg.tuning) && msg.tuning.length
                                             && typeof window.displayTuningTargets === 'function') {
                                         const targets = window.displayTuningTargets(msg.tuning, {
@@ -2378,7 +2395,7 @@ function createHighway() {
                         case 'anchors':
                             hwState.anchors = msg.data;
                             if (hwState.anchors.length) {
-                                hwState.displayMaxFret = Math.max(hwState.anchors[0].fret + hwState.anchors[0].width + 3, 8);
+                                hwState.displayMaxFret = capBoardFret(Math.max(hwState.anchors[0].fret + hwState.anchors[0].width + 3, 8));
                             }
                             break;
                         case 'chord_templates': hwState.chordTemplates = msg.data; break;
