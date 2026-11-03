@@ -558,7 +558,8 @@
             _state.visualizationMode = config.visualizationMode || 'default';
             _state.audioInputMode = config.audioInputMode || 'auto';
 
-            if (config.lastInstrument && _state._allTunings[config.lastInstrument]) {
+            if (config.lastInstrument && _state._allTunings[config.lastInstrument]
+                    && !/^bass-/.test(config.lastInstrument)) {
                 _state.selectedInstrument = config.lastInstrument;
             }
             if (_state.instrumentSelect) { _state.instrumentSelect.value = _state.selectedInstrument; _tunerUIApi?.updateInstrumentDisplay(); }

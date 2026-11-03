@@ -707,8 +707,8 @@ export function _onNamingModeChange(value) {
 
 function _getArrangements() {
     return _getArrangementNamingMode() === 'smart'
-        ? ['Lead', 'Rhythm', 'Bass']
-        : ['Lead', 'Rhythm', 'Bass', 'Combo'];
+        ? ['Lead', 'Rhythm']
+        : ['Lead', 'Rhythm', 'Combo'];
 }
 
 function _arrangementBadgeHtml(arrangement, nm) {
@@ -726,7 +726,6 @@ function _arrangementBadgeHtml(arrangement, nm) {
 // would match all sloppaks and confuse users.
 const _STEM_DEFS = [
     { id: 'drums', label: 'Drums' },
-    { id: 'bass', label: 'Bass' },
     { id: 'vocals', label: 'Vocals' },
     { id: 'guitar', label: 'Guitar' },
     { id: 'piano', label: 'Piano' },
@@ -1004,13 +1003,21 @@ export function _renderLibFilterChips() {
     const row = document.getElementById('lib-filter-chips');
     if (!row) return;
     const chips = [];
-    for (const a of _libFilters.arrHas) chips.push({ label: a, kind: 'require', remove: () => _libFilters.arrHas = _libFilters.arrHas.filter(x => x !== a) });
-    for (const a of _libFilters.arrLacks) chips.push({ label: `no ${a}`, kind: 'exclude', remove: () => _libFilters.arrLacks = _libFilters.arrLacks.filter(x => x !== a) });
+    for (const a of _libFilters.arrHas) {
+        if (a === 'Bass') continue;
+        chips.push({ label: a, kind: 'require', remove: () => _libFilters.arrHas = _libFilters.arrHas.filter(x => x !== a) });
+    }
+    for (const a of _libFilters.arrLacks) {
+        if (a === 'Bass') continue;
+        chips.push({ label: `no ${a}`, kind: 'exclude', remove: () => _libFilters.arrLacks = _libFilters.arrLacks.filter(x => x !== a) });
+    }
     for (const s of _libFilters.stemsHas) {
+        if (s === 'bass') continue;
         const def = _STEM_DEFS.find(d => d.id === s);
         chips.push({ label: def ? def.label : s, kind: 'require', remove: () => _libFilters.stemsHas = _libFilters.stemsHas.filter(x => x !== s) });
     }
     for (const s of _libFilters.stemsLacks) {
+        if (s === 'bass') continue;
         const def = _STEM_DEFS.find(d => d.id === s);
         chips.push({ label: `no ${def ? def.label : s}`, kind: 'exclude', remove: () => _libFilters.stemsLacks = _libFilters.stemsLacks.filter(x => x !== s) });
     }

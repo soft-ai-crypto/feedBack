@@ -2954,8 +2954,8 @@
             '<div class="p-5 space-y-5">' +
             '<div class="flex items-center justify-between"><h3 class="text-lg font-semibold text-fb-text">Filters</h3>' +
             '<button data-drawer-close class="text-fb-textDim hover:text-fb-text">✕</button></div>' +
-            section('Arrangements', ARRANGEMENTS.map((a) => triPill('arr', a, a, triState(f.arr_has, f.arr_lacks, a))).join('')) +
-            section('Stems (feedpak)', STEMS.map((s) => triPill('stem', s, s, triState(f.stem_has, f.stem_lacks, s))).join('') +
+            section('Arrangements', ARRANGEMENTS.filter((a) => a !== 'Bass').map((a) => triPill('arr', a, a, triState(f.arr_has, f.arr_lacks, a))).join('')) +
+            section('Stems (feedpak)', STEMS.filter((s) => s !== 'bass').map((s) => triPill('stem', s, s, triState(f.stem_has, f.stem_lacks, s))).join('') +
                 (() => {
                     // One-click "which songs still need splitting": lacks EVERY
                     // instrument stem — the same query Stem Splitter's own

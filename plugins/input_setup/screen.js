@@ -22,7 +22,6 @@
     const DONE_KEY = (inst) => `input_setup.done.${inst}`;
     const INSTRUMENTS = {
         guitar: { label: 'Guitar', mode: 'audio' },
-        bass: { label: 'Bass', mode: 'audio' },
         keys: { label: 'Keys / Piano', mode: 'midi' },
         piano: { label: 'Keys / Piano', mode: 'midi' },
         drums: { label: 'Drums', mode: 'midi' },
@@ -363,7 +362,7 @@
                 instruments = paths.map((p) => (typeof p === 'string' ? p : (p && p.id))).filter(Boolean);
             }
         } catch (_) { /* offline — fall back below */ }
-        if (!instruments.length) instruments = ['guitar', 'bass', 'keys', 'drums'];
+        if (!instruments.length) instruments = ['guitar', 'keys', 'drums'];
         launch(instruments);
     };
 })();

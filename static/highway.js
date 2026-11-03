@@ -2305,6 +2305,8 @@ function createHighway() {
                                     sel.textContent = '';
                                     for (const a of msg.arrangements) {
                                         const displayName = (namingMode === 'smart' && a.smart_name) ? a.smart_name : a.name;
+                                        const bassLabel = `${a.name || ''} ${a.smart_name || ''} ${displayName || ''}`;
+                                        if (/\bbass\b/i.test(bassLabel)) continue;
                                         // Keep the note-count suffix in both modes — useful for
                                         // disambiguating sibling arrangements (e.g. two "Alt. Lead"s).
                                         const label = `${displayName} (${a.notes})`;

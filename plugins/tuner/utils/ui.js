@@ -186,14 +186,6 @@ window._tunerUI = function(state, actions) {
             guitarGroup.appendChild(opt);
         });
 
-        const bassGroup = document.createElement('optgroup');
-        bassGroup.label = 'Bass';
-        [['bass-4', '4-string'], ['bass-5', '5-string']].forEach(([val, label]) => {
-            const opt = document.createElement('option');
-            opt.value = val; opt.textContent = label;
-            bassGroup.appendChild(opt);
-        });
-
         const mandolinGroup = document.createElement('optgroup');
         mandolinGroup.label = 'Carnatic Mandolin';
         const mandolinOpt = document.createElement('option');
@@ -202,7 +194,6 @@ window._tunerUI = function(state, actions) {
         mandolinGroup.appendChild(mandolinOpt);
 
         state.instrumentSelect.appendChild(guitarGroup);
-        state.instrumentSelect.appendChild(bassGroup);
         state.instrumentSelect.appendChild(mandolinGroup);
         state.instrumentSelect.value = '__display__';
     }

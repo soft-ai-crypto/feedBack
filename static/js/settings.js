@@ -36,6 +36,10 @@ export function _syncDefaultArrangementSelect(value) {
     const sel = document.getElementById('default-arrangement');
     if (!sel) return;
     const wanted = value || '';
+    if (/\bbass\b/i.test(wanted)) {
+        sel.value = '';
+        return;
+    }
     const existing = Array.from(sel.options).find(opt => opt.value === wanted);
     const dynamic = sel.querySelector('option[data-dynamic-default-arrangement]');
     if (dynamic && dynamic.value !== wanted) dynamic.remove();
@@ -110,6 +114,7 @@ export async function loadSettings() {
     const dlcEl = document.getElementById('dlc-path');
     if (dlcEl) dlcEl.value = data.dlc_dir || '';
     _defaultArrangement = data.default_arrangement || '';
+    if (/\bbass\b/i.test(_defaultArrangement)) _defaultArrangement = '';
     _syncDefaultArrangementSelect(_defaultArrangement);
     // Feed the library its tuning PERSPECTIVE (lead / rhythm / bass) — the
     // tuning facet, filter, sort and badges all answer for the profile the
