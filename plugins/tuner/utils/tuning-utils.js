@@ -21,12 +21,23 @@
         6: [40, 45, 50, 55, 59, 64],          // guitar 6: E2 A2 D3 G3 B3 E4
         7: [35, 40, 45, 50, 55, 59, 64],      // guitar 7: B1 E2 A2 D3 G3 B3 E4
         8: [30, 35, 40, 45, 50, 55, 59, 64],  // guitar 8: F#1 B1 E2 A2 D3 G3 B3 E4
+        // C#3 G#3 C#4 G#4 C#5. Keyed by instrument, not by string count,
+        // so bass-5 (key 5) stays the bass open strings.
+        'carnatic-mandolin-5': [49, 56, 61, 68, 73],
     };
 
-    function offsetsToFreqs(offsets, isBass) {
+    function openStringInstrumentKey(arrangementName) {
+        return /carnatic\s+mandolin/i.test(String(arrangementName || ''))
+            ? 'carnatic-mandolin-5'
+            : '';
+    }
+
+    function offsetsToFreqs(offsets, isBass, instrumentKey) {
         const len = offsets.length;
         let base;
-        if (len === 4 || len === 5) {
+        if (instrumentKey === 'carnatic-mandolin-5') {
+            base = _BASE_MIDI['carnatic-mandolin-5'];
+        } else if (len === 4 || len === 5) {
             base = isBass ? _BASE_MIDI[len] : _BASE_MIDI[6];
         } else {
             base = _BASE_MIDI[len] || _BASE_MIDI[6];
@@ -76,5 +87,8 @@
         return offsets.join(' ');
     }
 
-    window._tunerUtils = { freqToMidi, midiToFreq, midiToNote, offsetsToFreqs, getTuningName, preferFlats };
+    window._tunerUtils = {
+        freqToMidi, midiToFreq, midiToNote, offsetsToFreqs, getTuningName, preferFlats,
+        openStringInstrumentKey,
+    };
 })();

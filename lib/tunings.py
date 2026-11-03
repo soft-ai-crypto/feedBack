@@ -20,6 +20,8 @@ STANDARD_OPEN_MIDIS: dict[str, list[int]] = {
     "bass-4": [28, 33, 38, 43],
     "bass-5": [23, 28, 33, 38, 43],
     "bass-6": [23, 28, 33, 38, 43, 48],
+    # C#3 G#3 C#4 G#4 C#5. Its own instrument — not a bass-5 or a guitar offset.
+    "carnatic-mandolin-5": [49, 56, 61, 68, 73],
 }
 
 # Curated built-in profiles. This intentionally starts by absorbing the useful
@@ -84,6 +86,9 @@ TUNING_PRESET_MIDIS: dict[str, dict[str, list[int]]] = {
         "D Standard": [21, 26, 31, 36, 41, 46],
         "C# Standard": [20, 25, 30, 35, 40, 45],
         "C Standard": [19, 24, 29, 34, 39, 44],
+    },
+    "carnatic-mandolin-5": {
+        "Standard": [49, 56, 61, 68, 73],
     },
 }
 
@@ -641,7 +646,7 @@ def bass_tuning_key(offsets: list[int]) -> str:
     return perspective_tuning_key(offsets, PERSPECTIVES["bass"])
 
 
-def tuning_name(offsets: list[int]) -> str:
+def tuning_name(offsets: list[int], instrument: str = "") -> str:
     # The pattern checks below are gated on `len(offsets)` being 6 or 4. The
     # naming conventions are E-standard-rooted — e.g. a 7-string all-zeros
     # tuning has a low B, not an E, so labeling it "E Standard" would be wrong.
@@ -652,6 +657,18 @@ def tuning_name(offsets: list[int]) -> str:
     # offsets. Bass callers must normalize FIRST (`normalize_bass_offsets`):
     # stored bass arrays are commonly six elements with a padded tail, and the
     # padding must never reach this namer. See the block above.
+    #
+    # Carnatic Mandolin Standard is five zeros against its own open strings
+    # (C# G# C# G# C#), not a guitar/bass length. Callers pass `instrument`
+    # so a 5-string guitar chart is still "Custom Tuning".
+
+    inst = (instrument or "").lower().replace("_", " ").replace("-", " ")
+    if (
+        "carnatic mandolin" in inst
+        and len(offsets) == 5
+        and all(o == 0 for o in offsets)
+    ):
+        return "Standard"
 
     # Standard tunings (all strings same offset)
     standard = {

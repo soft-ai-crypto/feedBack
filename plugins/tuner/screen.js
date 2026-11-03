@@ -102,6 +102,12 @@
         return { ...(_state._allTunings[instrument] || {}) };
     }
 
+    function _songInstrumentKey(songInfo) {
+        const u = window._tunerUtils;
+        const name = (songInfo && songInfo.arrangement) || '';
+        return (u && typeof u.openStringInstrumentKey === 'function') ? u.openStringInstrumentKey(name) : '';
+    }
+
     function _tuningIdentityKey(songInfo) {
         if (!songInfo || !Array.isArray(songInfo.tuning) || !songInfo.tuning.length) return null;
         const ctx = (typeof window.feedBack?.songTuningContext === 'function')
@@ -120,7 +126,8 @@
         if (!sc || sc <= 0) return null;
         const offsets = songInfo.tuning.slice(0, sc);
         if (!offsets.length) return null;
-        return (isBass ? 'b' : 'g') + ':' + sc + ':' + offsets.join(',');
+        const instKey = _songInstrumentKey(songInfo);
+        return (instKey || (isBass ? 'b' : 'g')) + ':' + sc + ':' + offsets.join(',');
     }
 
     function _autoOpenSessionKey(songInfo) {
@@ -164,7 +171,7 @@
         if (!sc || sc <= 0) return null;
         const offsets = songInfo.tuning.slice(0, sc);
         if (!offsets.length) return null;
-        return _openMidisFromFreqs(u.offsetsToFreqs(offsets, isBass));
+        return _openMidisFromFreqs(u.offsetsToFreqs(offsets, isBass, _songInstrumentKey(songInfo)));
     }
 
     // The player's CURRENT physical tuning. Prefer the host-owned live working
@@ -491,10 +498,13 @@
             _state.currentSongIsBass = isBass;
             _state.currentSongStringCount = sc;
             const _refScale = _state.referencePitch / 440;
-            _state.selectedTuning = window._tunerUtils.offsetsToFreqs(_state.currentSongOffsets, isBass).map(f => f * _refScale);
-            const songInstrument = isBass
-                ? ('bass-' + (sc === 5 ? 5 : 4))
-                : (sc === 8 ? 'guitar-8' : sc === 7 ? 'guitar-7' : 'guitar-6');
+            const instKey = _songInstrumentKey(songInfo);
+            _state.selectedTuning = window._tunerUtils.offsetsToFreqs(_state.currentSongOffsets, isBass, instKey).map(f => f * _refScale);
+            const songInstrument = instKey
+                ? instKey
+                : (isBass
+                    ? ('bass-' + (sc === 5 ? 5 : 4))
+                    : (sc === 8 ? 'guitar-8' : sc === 7 ? 'guitar-7' : 'guitar-6'));
             if (songInstrument !== _state.selectedInstrument) {
                 _state.selectedInstrument = songInstrument;
                 _state.tunings = _buildTuningsForInstrument(_state.selectedInstrument);
@@ -825,9 +835,14 @@
     function _tuningOffsetsFromFreqs(freqs) {
         const u = window._tunerUtils;
         if (!u || typeof u.offsetsToFreqs !== 'function' || typeof u.freqToMidi !== 'function') return null;
-        const isBass = /^bass/.test(_state.selectedInstrument || '');   // the selected instrument, not the song's
+        const inst = _state.selectedInstrument || '';
+        const isBass = /^bass/.test(inst);   // the selected instrument, not the song's
         const refScale = (Number(_state.referencePitch) || 440) / 440;
-        const std = u.offsetsToFreqs(new Array(freqs.length).fill(0), isBass);
+        const std = u.offsetsToFreqs(
+            new Array(freqs.length).fill(0),
+            isBass,
+            inst === 'carnatic-mandolin-5' ? inst : '',
+        );
         if (!Array.isArray(std) || std.length !== freqs.length) return null;
         const out = [];
         for (let i = 0; i < freqs.length; i++) {

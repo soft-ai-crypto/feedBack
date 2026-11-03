@@ -1023,7 +1023,10 @@ async def highway_ws(websocket: WebSocket, filename: str, arrangement: int = -1,
         # base[string] + offset + capo + fret (matches the tuner / open-string
         # labels). arrangement_string_count is O(notes), so compute once here.
         _base = base_open_string_midis(
-            arrangement_string_count(arr), arrangement_is_bass(arr))
+            arrangement_string_count(arr),
+            arrangement_is_bass(arr),
+            f"{arr.type or ''} {arr.name or ''}",
+        )
         _capo = int(getattr(arr, "capo", 0) or 0)
 
         def _fill_scale_degree(wire: dict, n, t: float) -> None:

@@ -817,8 +817,10 @@
         for (const chip of chips) {
             const offs = chip.getAttribute('data-tuning-offsets').split(',').map(Number);
             if (!offs.length || offs.some((n) => !isFinite(n))) continue;
-            // Pass the instrument so coverage uses the right base pitches (bass vs guitar).
-            const arrangement = chip.dataset.tuningBass === '1' ? 'Bass' : 'Lead';
+            // Pass the instrument so coverage uses the right base pitches
+            // (bass vs guitar vs Carnatic Mandolin — not Lead-by-default).
+            const arrangement = chip.dataset.tuningBass === '1' ? 'Bass'
+                : (chip.dataset.tuningArrangement || 'Lead');
             let rep = null;
             try { rep = await cov({ tuning: offs, stringCount: offs.length, arrangement: arrangement }); } catch (_) { rep = null; }
             if (token !== _tuningDecorToken) return;   // superseded by a re-paint / tuning change
@@ -840,7 +842,10 @@
         // Bass players see the bass chart's tuning (guitar fallback) — the card
         // must agree with the facet/filter or the grid contradicts the pills.
         const shownTuning = shownTuningName(shown);
-        const tuningLabel = (typeof window.displayTuningName === 'function')
+        const arrLabel = (shown.arrangements || []).map((a) =>
+            (a && (a.name || a.smart_name)) || '').filter(Boolean).join(' ');
+        const isCarnaticMandolin = /carnatic\s+mandolin/i.test(arrLabel);
+        let tuningLabel = (typeof window.displayTuningName === 'function')
             ? window.displayTuningName(shownTuning)
             : (shownTuning || '');
         let tuning = '';
@@ -849,9 +854,17 @@
                 ? (window.parseRawTuningOffsets(shownTuningOffsets(shown))
                     || window.parseRawTuningOffsets(shownTuning))
                 : null;
-            const targetNotes = (tuningLabel === 'Custom Tuning' && rawOffsets
+            if (isCarnaticMandolin && rawOffsets && rawOffsets.length
+                    && rawOffsets.every((o) => Number(o) === 0)) {
+                tuningLabel = 'Standard';
+            }
+            const targetNotes = ((tuningLabel === 'Custom Tuning' || isCarnaticMandolin)
+                && rawOffsets
                 && typeof window.displayTuningTargets === 'function')
-                ? window.displayTuningTargets(rawOffsets, { tuningName: tuningLabel })
+                ? window.displayTuningTargets(rawOffsets, {
+                    tuningName: tuningLabel,
+                    arrangement: arrLabel,
+                })
                 : '';
             // Mark a tuning we INFERRED from the guitar chart (this song has no
             // bass arrangement) so a bass player isn't shown a borrowed tuning
@@ -859,7 +872,7 @@
             // spells it out.
             const inferred = shown.tuning_inferred === true;
             const badgeTitle = (targetNotes
-                ? ('Custom Tuning: ' + targetNotes)
+                ? (tuningLabel + ': ' + targetNotes)
                 : tuningLabel)
                 + (inferred ? ' — from the guitar chart (no bass arrangement)' : '');
             const pos = 'absolute top-2 ' + (state.selectMode ? 'left-9' : 'left-2');
@@ -879,10 +892,12 @@
                     && chipArrs.every((a) => /\bbass\b/i.test((a && a.name) || '')));
             const matchAttr = (rawOffsets && rawOffsets.length)
                 ? ' data-tuning-chip data-tuning-offsets="' + esc(rawOffsets.join(',')) + '"'
-                    + (chipIsBass ? ' data-tuning-bass="1"' : '') : '';
+                    + (chipIsBass ? ' data-tuning-bass="1"' : '')
+                    + (isCarnaticMandolin && arrLabel
+                        ? ' data-tuning-arrangement="' + esc(arrLabel) + '"' : '') : '';
             if (targetNotes) {
                 tuning = '<span class="' + pos + ' bg-fb-mid text-black text-[0.5625rem] font-bold px-1.5 py-0.5 rounded-sm leading-tight max-w-[5.5rem] text-center"' + matchAttr + ' title="' + esc(badgeTitle) + '">'
-                    + esc('Custom Tuning') + '<br><span class="font-semibold tracking-wide">' + esc(targetNotes) + '</span></span>';
+                    + esc(tuningLabel) + '<br><span class="font-semibold tracking-wide">' + esc(targetNotes) + '</span></span>';
             } else {
                 tuning = '<span class="' + pos + ' bg-fb-mid text-black text-[0.625rem] font-bold px-1.5 py-0.5 rounded-sm"' + matchAttr + ' title="' + esc(badgeTitle) + '">' + esc(tuningLabel) + (inferred ? '<span class="opacity-60"> ~</span>' : '') + '</span>';
             }

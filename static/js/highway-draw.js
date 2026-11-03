@@ -1300,9 +1300,16 @@ export function _drawFretLineChordPreview(hwState, W, H) {
     hwState.ctx.font = `bold ${fontSize}px sans-serif`;
     hwState.ctx.textAlign = 'center';
     hwState.ctx.textBaseline = 'middle';
+    // The fret-line chord dots used a fixed 6-string grid (divisor 5). Guitar
+    // and bass keep that grid. A Carnatic Mandolin uses its real string count
+    // so the dots sit on the same 5 lanes as drawStrings.
+    const arrangement = (hwState.songInfo && hwState.songInfo.arrangement) || '';
+    const sc = hwState._xfStringCount !== null ? hwState._xfStringCount : hwState.stringCount;
+    const grid = /carnatic\s+mandolin/i.test(arrangement) ? Math.max(1, sc) : 6;
+    const span = Math.max(1, grid - 1);
     for (const cn of hwState._chordFretLineNotes) {
-        const yi = hwState._inverted ? 5 - cn.s : cn.s;
-        const syl = strTop + (yi / 5) * (strBot - strTop);
+        const yi = hwState._inverted ? (grid - 1 - cn.s) : cn.s;
+        const syl = strTop + (yi / span) * (strBot - strTop);
         const fretXPos = fretX(hwState, cn.f, 1, W);
         hwState.ctx.fillStyle = hwState.STRING_COLORS[cn.s] || '#888';
         hwState.ctx.beginPath();

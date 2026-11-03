@@ -62,6 +62,16 @@ test('displayTuningTargets: bass 4-string is low-to-high notes', () => {
     assert.equal(targets, 'E A D G');
 });
 
+test('displayTuningTargets: Carnatic Mandolin uses its own open notes', () => {
+    const ctx = { stringCount: 5, arrangement: 'Carnatic Mandolin' };
+    assert.equal(effectiveStringCount([0, 0, 0, 0, 0, 0], ctx), 5);
+    assert.equal(displayTuningTargets([0, 0, 0, 0, 0], ctx), 'C# G# C# G# C#');
+    const details = displayTuningTargetDetails([0, 0, 0, 0, 0], ctx);
+    assert.equal(details[0].octaveNote, 'C#3');
+    assert.equal(details[4].octaveNote, 'C#5');
+    assert.equal(displayTuningTargets([0, 0, 0, 0, 0], { stringCount: 5, arrangement: 'Lead' }), 'E A D G B');
+});
+
 test('displayTuningTargetDetails: includes string number and octave in titles', () => {
     const details = displayTuningTargetDetails([-2, 0, 0, 0, -2, -2], LEAD_CTX);
     assert.equal(details.length, 6);

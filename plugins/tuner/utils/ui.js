@@ -37,6 +37,7 @@ window._tunerUI = function(state, actions) {
     const _INSTRUMENT_DISPLAY = {
         'guitar-6': 'Guitar (6)', 'guitar-7': 'Guitar (7)', 'guitar-8': 'Guitar (8)',
         'bass-4': 'Bass (4)', 'bass-5': 'Bass (5)',
+        'carnatic-mandolin-5': 'Carnatic Mandolin (5)',
     };
 
     function _freqsEqual(a, b) {
@@ -127,9 +128,11 @@ window._tunerUI = function(state, actions) {
             if (!name || !state.selectedTuning || state.selectedTuning.length === 0) return;
             const rounded = state.selectedTuning.map(f => Math.round(f * 100) / 100);
             const sc = rounded.length;
-            const instrument = (sc === 4 || sc === 5)
-                ? (state.currentSongIsBass ? 'bass-' + sc : 'guitar-6')
-                : (sc === 7 ? 'guitar-7' : sc === 8 ? 'guitar-8' : 'guitar-6');
+            const instrument = state.selectedInstrument === 'carnatic-mandolin-5'
+                ? 'carnatic-mandolin-5'
+                : ((sc === 4 || sc === 5)
+                    ? (state.currentSongIsBass ? 'bass-' + sc : 'guitar-6')
+                    : (sc === 7 ? 'guitar-7' : sc === 8 ? 'guitar-8' : 'guitar-6'));
             try {
                 const config = await fetch('/api/plugins/tuner/config').then(r => r.json());
                 const custom = config.customTunings || {};
@@ -191,8 +194,16 @@ window._tunerUI = function(state, actions) {
             bassGroup.appendChild(opt);
         });
 
+        const mandolinGroup = document.createElement('optgroup');
+        mandolinGroup.label = 'Carnatic Mandolin';
+        const mandolinOpt = document.createElement('option');
+        mandolinOpt.value = 'carnatic-mandolin-5';
+        mandolinOpt.textContent = '5-string';
+        mandolinGroup.appendChild(mandolinOpt);
+
         state.instrumentSelect.appendChild(guitarGroup);
         state.instrumentSelect.appendChild(bassGroup);
+        state.instrumentSelect.appendChild(mandolinGroup);
         state.instrumentSelect.value = '__display__';
     }
 
@@ -218,7 +229,10 @@ window._tunerUI = function(state, actions) {
                     ? window.feedBack.effectiveStringCount(info.tuning, ctx)
                     : (info.stringCount || info.tuning.length);
                 const sliced = info.tuning.slice(0, sc);
-                const freqs = window._tunerUtils.offsetsToFreqs(sliced, isBass);
+                const instKey = (typeof window._tunerUtils.openStringInstrumentKey === 'function')
+                    ? window._tunerUtils.openStringInstrumentKey(info.arrangement)
+                    : '';
+                const freqs = window._tunerUtils.offsetsToFreqs(sliced, isBass, instKey);
                 const tName = (typeof window.displayTuningName === 'function')
                     ? window.displayTuningName(null, sliced)
                     : window._tunerUtils.getTuningName(sliced);

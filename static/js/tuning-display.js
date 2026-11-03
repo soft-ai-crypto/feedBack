@@ -82,6 +82,11 @@ export function displayTuningName(value, offsets) {
     return '';
 }
 
+function _isCarnaticMandolinContext(ctx) {
+    const label = ((ctx.arrangement || '') + ' ' + (ctx.arrangement_smart_name || '')).toLowerCase();
+    return label.indexOf('carnatic mandolin') !== -1;
+}
+
 export function isBassArrangement(context) {
     const ctx = context && typeof context === 'object' ? context : {};
     if (typeof ctx.isBass === 'boolean') return ctx.isBass;
@@ -94,6 +99,10 @@ export function isBassArrangement(context) {
 export function effectiveStringCount(offsets, context) {
     if (!Array.isArray(offsets) || !offsets.length) return 0;
     const ctx = context && typeof context === 'object' ? context : {};
+    if (_isCarnaticMandolinContext(ctx)) {
+        const sc = ctx.stringCount > 0 ? Number(ctx.stringCount) : 5;
+        return Math.min(sc, offsets.length);
+    }
     const isBass = isBassArrangement(ctx);
     let sc = ctx.stringCount > 0 ? Number(ctx.stringCount) : 0;
     if (!isBass) {
@@ -123,6 +132,9 @@ const _TUNING_BASE_MIDI = {
     8: [30, 35, 40, 45, 50, 55, 59, 64],
 };
 
+// C#3 G#3 C#4 G#4 C#5 — same pitches as tunings.py carnatic-mandolin-5.
+const _CARNATIC_MANDOLIN_OPEN_MIDI = [49, 56, 61, 68, 73];
+
 const _TUNING_NOTE_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 const _TUNING_NOTE_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -131,10 +143,12 @@ function _tuningMidiToFreq(m) {
     return Math.pow(2, (m - 69) / 12) * 440;
 }
 
-function _tuningOffsetsToFreqs(offsets, isBass) {
+function _tuningOffsetsToFreqs(offsets, isBass, isMandolin) {
     const len = offsets.length;
     let base;
-    if (len === 4 || len === 5) {
+    if (isMandolin) {
+        base = _CARNATIC_MANDOLIN_OPEN_MIDI;
+    } else if (len === 4 || len === 5) {
         base = isBass ? _TUNING_BASE_MIDI[len] : _TUNING_BASE_MIDI[6];
     } else {
         base = _TUNING_BASE_MIDI[len] || _TUNING_BASE_MIDI[6];
@@ -174,7 +188,7 @@ function _tuningTargetFreqs(offsets, context) {
     if (!trimmed.length) return [];
     const isBass = isBassArrangement(ctx);
     try {
-        return _tuningOffsetsToFreqs(trimmed, isBass);
+        return _tuningOffsetsToFreqs(trimmed, isBass, _isCarnaticMandolinContext(ctx));
     } catch (_) {
         return [];
     }

@@ -38,6 +38,15 @@ import loosefolder as loosefolder_mod
 log = logging.getLogger("feedBack.scan_worker")
 
 
+def _instrument_label_from_arrs(arrs) -> str:
+    """Arrangement type+name text for tuning_name()'s optional instrument arg."""
+    bits = []
+    for a in arrs or []:
+        if isinstance(a, dict):
+            bits.append(f"{a.get('type', '')} {a.get('name', '')}")
+    return " ".join(bits)
+
+
 def _relpath(f: Path, dlc: Path) -> str:
     # Store the path relative to the DLC root so sub-folders (e.g.
     # dlc/sloppak/foo.sloppak) resolve back correctly later.
@@ -101,7 +110,7 @@ def _extract_meta_sloppak(path: Path) -> dict:
     """Extract metadata for a sloppak (file or directory)."""
     meta = sloppak_mod.extract_meta(path)
     offsets = meta.pop("tuning_offsets", None) or [0] * 6
-    name = tuning_name(offsets)
+    name = tuning_name(offsets, _instrument_label_from_arrs(meta.get("arrangements")))
     meta["tuning"] = name
     meta["tuning_name"] = name
     meta["tuning_sort_key"] = sum(offsets)
@@ -137,7 +146,7 @@ def _extract_meta_loosefolder(path: Path, dlc_root: Path | None) -> dict:
     # inside DLC_DIR.
     meta = loosefolder_mod.extract_meta(path, dlc_root=dlc_root)
     offsets = meta.pop("tuning_offsets", None) or [0] * 6
-    name = tuning_name(offsets)
+    name = tuning_name(offsets, _instrument_label_from_arrs(meta.get("arrangements")))
     meta["tuning"] = name
     meta["tuning_name"] = name
     meta["tuning_sort_key"] = sum(offsets)

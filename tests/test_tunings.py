@@ -173,6 +173,9 @@ def test_default_tunings_include_extended_host_profiles():
 def test_default_tuning_frequencies_are_derived_from_midis():
     assert DEFAULT_TUNINGS["guitar-6"]["Standard"] == open_midis_to_freqs([40, 45, 50, 55, 59, 64])
     assert DEFAULT_TUNINGS["bass-6"]["Standard"] == open_midis_to_freqs([23, 28, 33, 38, 43, 48])
+    # C#3 G#3 C#4 G#4 C#5 — its own key, not bass-5 and not a guitar offset.
+    assert DEFAULT_TUNINGS["carnatic-mandolin-5"]["Standard"] == open_midis_to_freqs([49, 56, 61, 68, 73])
+    assert tuning_offsets_from_midis("carnatic-mandolin-5", [49, 56, 61, 68, 73]) == [0, 0, 0, 0, 0]
 
 
 def test_tuning_offsets_from_named_presets():

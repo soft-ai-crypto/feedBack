@@ -1207,6 +1207,37 @@ def test_string_count_4_for_authored_bass_type_without_bass_in_name():
     assert arrangement_string_count(arr) == 4
 
 
+def test_carnatic_mandolin_is_five_strings_with_its_own_open_notes():
+    # Sparse chart (strings 0..2 only) must still draw 5 lanes. A Lead chart
+    # with the same notes stays at 6. Open pitch is C#3, not guitar E2 or bass B0.
+    mandolin = Arrangement(
+        name="Carnatic Mandolin",
+        tuning=[0, 0, 0, 0, 0],
+        notes=[Note(time=float(i), string=i, fret=0) for i in range(3)],
+    )
+    assert arrangement_string_count(mandolin) == 5
+    assert note_pitch_midi(mandolin, Note(time=0, string=0, fret=0)) == 49
+    assert note_pitch_midi(mandolin, Note(time=0, string=4, fret=0)) == 73
+    assert base_open_string_midis(5, False, "Carnatic Mandolin") == [49, 56, 61, 68, 73]
+
+    by_type = Arrangement(
+        name="Lead",
+        type="carnatic-mandolin",
+        tuning=[0, 0, 0, 0, 0, 0],
+        notes=[Note(time=0.0, string=0, fret=0)],
+    )
+    assert arrangement_string_count(by_type) == 5
+
+    guitar = Arrangement(
+        name="Lead",
+        tuning=[0, 0, 0, 0, 0],
+        notes=[Note(time=float(i), string=i, fret=0) for i in range(3)],
+    )
+    assert arrangement_string_count(guitar) == 6
+    assert base_open_string_midis(5, False)[0] == 40
+    assert base_open_string_midis(5, True)[0] == 23
+
+
 def test_string_count_6_for_authored_guitar_type_no_regression():
     # A non-bass authored type on a generic name still resolves to the
     # canonical 6 — the type signal only pulls DOWN to 4 for bass.

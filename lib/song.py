@@ -473,14 +473,32 @@ _TUNING_BASE_MIDI = {
     8: [30, 35, 40, 45, 50, 55, 59, 64],
 }
 
+# Same pitches as tunings.STANDARD_OPEN_MIDIS["carnatic-mandolin-5"].
+_CARNATIC_MANDOLIN_OPEN_MIDI = [49, 56, 61, 68, 73]
 
-def base_open_string_midis(string_count: int, is_bass: bool) -> list[int]:
+
+def _is_carnatic_mandolin_label(label: str) -> bool:
+    text = (label or "").lower().replace("_", " ").replace("-", " ")
+    return "carnatic mandolin" in text
+
+
+def arrangement_is_carnatic_mandolin(arr: Arrangement) -> bool:
+    """True when the arrangement is a Carnatic Mandolin, by authored type or name.
+
+    Guitar and bass charts are left on their existing paths. The name check is
+    what the highway already receives (`song_info.arrangement`)."""
+    return _is_carnatic_mandolin_label(f"{getattr(arr, 'type', '')} {getattr(arr, 'name', '')}")
+
+
+def base_open_string_midis(string_count: int, is_bass: bool, instrument: str = "") -> list[int]:
     """Standard open-string base MIDI list for an arrangement, index 0 = lowest.
 
-    Mirrors app.js `_tuningOffsetsToFreqs`: a 4/5-string *bass* uses its own low
-    base, while a 4/5-string non-bass (a guitar voicing) borrows the low strings
-    of the 6-string base; 6/7/8 use their own. Unknown counts fall back to the
-    6-string base."""
+    Mirrors the tuner: a 4/5-string *bass* uses its own low base, while a
+    4/5-string non-bass (a guitar voicing) borrows the low strings of the
+    6-string base; 6/7/8 use their own. Unknown counts fall back to the
+    6-string base. A Carnatic Mandolin label uses its own 5 open notes."""
+    if _is_carnatic_mandolin_label(instrument):
+        return list(_CARNATIC_MANDOLIN_OPEN_MIDI)
     n = int(string_count)
     if n in (4, 5):
         return _TUNING_BASE_MIDI[n] if is_bass else _TUNING_BASE_MIDI[6]
@@ -509,8 +527,11 @@ def note_pitch_midi(arr: "Arrangement", note: "Note") -> int | None:
     O(notes) via ``arrangement_string_count`` — for a whole arrangement, hoist
     the base with :func:`base_open_string_midis` and call :func:`pitch_from_base`
     per note instead."""
-    base = base_open_string_midis(arrangement_string_count(arr),
-                                  arrangement_is_bass(arr))
+    base = base_open_string_midis(
+        arrangement_string_count(arr),
+        arrangement_is_bass(arr),
+        f"{arr.type or ''} {arr.name or ''}",
+    )
     return pitch_from_base(base, int(getattr(arr, "capo", 0) or 0),
                            arr.tuning or [], note.string, note.fret)
 
@@ -708,6 +729,8 @@ def arrangement_string_count(arr: Arrangement) -> int:
       max(5, 6, 0) = 6
     * Sloppak 5-string bass, sparse usage (tuning len 5, notes 0..3) →
       max(4, 4, 5) = 5
+    * Carnatic Mandolin, sparse usage (tuning len 5, notes 0..2) →
+      name_based=5 → max(3, 5, 5) = 5. Guitar charts keep the 6 floor.
     * GP 7-string guitar (tuning len 7, notes 0..6) → max(7, 6, 7) = 7
     * GP 5-string bass (tuning len 5, notes 0..4) → max(5, 4, 5) = 5
     * Empty arrangement named "Bass" (tuning len 6) →
@@ -735,7 +758,12 @@ def arrangement_string_count(arr: Arrangement) -> int:
     notes_count = max_s + 1 if max_s >= 0 else 0
     # Bass signal (type / pathBass / name substring) — see arrangement_is_bass.
     # Any one being bass pulls the fallback to 4.
-    name_based = 4 if arrangement_is_bass(arr) else 6
+    if arrangement_is_bass(arr):
+        name_based = 4
+    elif arrangement_is_carnatic_mandolin(arr):
+        name_based = 5
+    else:
+        name_based = 6
     # Tuning-length signal — only trustworthy when NOT the arrangement XML
     # padded value of 6. Length 4/5 indicates explicit bass / 5-string
     # bass; length 7/8 indicates an extended-range guitar from GP.
