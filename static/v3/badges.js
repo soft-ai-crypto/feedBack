@@ -21,7 +21,11 @@
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    const STRING_COUNTS = { guitar: [6, 7, 8], bass: [4, 5, 6] };
+    const STRING_COUNTS = { guitar: [6, 7, 8], bass: [4, 5, 6], 'carnatic-mandolin': [5] };
+    const MENU_INSTRUMENTS = [
+        { id: 'guitar', label: 'Guitar' },
+        { id: 'carnatic-mandolin', label: 'Carnatic Mandolin' },
+    ];
     const PATHWAY_OPTIONS = [
         { id: 'songs', label: 'Songs' },
         { id: 'practice', label: 'Practice' },
@@ -147,7 +151,14 @@
     }
 
     function profileIdForInstrument(inst) {
-        return inst === 'bass' ? 'bass' : 'guitar-lead';
+        if (inst === 'bass') return 'bass';
+        if (inst === 'carnatic-mandolin') return 'carnatic-mandolin';
+        return 'guitar-lead';
+    }
+
+    function normalizeInstrument(inst) {
+        if (inst === 'bass' || inst === 'carnatic-mandolin') return inst;
+        return 'guitar';
     }
 
     async function loadSettings() {
@@ -158,7 +169,7 @@
                 // Clamp persisted values to valid ranges — config.json could
                 // hold out-of-range data (hand-edited or from an import), and the
                 // badge/tuner must render consistent state, not a bad number.
-                const instrument = s.instrument === 'bass' ? 'bass' : 'guitar';
+                const instrument = normalizeInstrument(s.instrument);
                 const counts = STRING_COUNTS[instrument];
                 const sc = Number(s.string_count);
                 const scValid = counts.includes(sc) ? sc : counts[0];
@@ -456,10 +467,12 @@
                   '<button type="button" data-inst-reset title="Reset this instrument to its home tuning" class="shrink-0 text-[0.6875rem] text-fb-textDim hover:text-fb-text border border-fb-border/40 hover:border-fb-border/70 rounded-md px-2 py-1 transition-colors">Back to default</button>' +
                   '</div>'
                 : '') +
-            instRow('Instrument', ['guitar', 'bass'].map((v) =>
-                pill('inst', v, v[0].toUpperCase() + v.slice(1), settings.instrument === v)).join('')) +
-            instRow('Strings', STRING_COUNTS[settings.instrument].map((v) =>
-                pill('strings', v, v + '', settings.string_count === v)).join('')) +
+            instRow('Instrument', MENU_INSTRUMENTS.map((it) =>
+                pill('inst', it.id, it.label, settings.instrument === it.id)).join('')) +
+            ((STRING_COUNTS[settings.instrument] || []).length > 1
+                ? instRow('Strings', STRING_COUNTS[settings.instrument].map((v) =>
+                    pill('strings', v, v + '', settings.string_count === v)).join(''))
+                : '') +
             // Handedness — a left-hander flips the whole highway (frets mirror).
             // Lives with the other player-orientation choices so it's part of the
             // same "Choose your instrument" step the onboarding tour spotlights —
@@ -496,7 +509,7 @@
         const keepOpen = openInstMenu;
         menu.querySelectorAll('[data-pill="inst"]').forEach((b) => b.addEventListener('click', async () => {
             const v = b.getAttribute('data-val');
-            const counts = STRING_COUNTS[v];
+            const counts = STRING_COUNTS[v] || [6];
             // Clamp string_count AND tuning to ones valid for the new
             // instrument, so switching can't persist (and push to the tuner) an
             // unsupported instrument+tuning combo.

@@ -40,11 +40,21 @@
     let _touched = false;       // set once anything explicitly writes/selects; gates the async seed
 
     function _normInstrument(instrument) {
-        return instrument === 'bass' ? 'bass' : 'guitar';
+        if (instrument === 'bass') return 'bass';
+        if (instrument === 'carnatic-mandolin') return 'carnatic-mandolin';
+        return 'guitar';
+    }
+    function _defaultStringCount(inst) {
+        if (inst === 'bass') return 4;
+        if (inst === 'carnatic-mandolin') return 5;
+        return 6;
+    }
+    function _isBareInstrument(instrument) {
+        return instrument === 'guitar' || instrument === 'bass' || instrument === 'carnatic-mandolin';
     }
     function _keyOf(instrument, stringCount) {
         const inst = _normInstrument(instrument);
-        const sc = Number(stringCount) || (inst === 'bass' ? 4 : 6);
+        const sc = Number(stringCount) || _defaultStringCount(inst);
         return inst + '-' + sc;
     }
     // Like _keyOf, but when the caller omits a string count we resolve it against the
@@ -59,14 +69,17 @@
                 const cur = _splitKey(_currentKey);
                 if (cur.instrument === inst) sc = cur.stringCount;
             }
-            if (!sc) sc = (inst === 'bass' ? 4 : 6);
+            if (!sc) sc = _defaultStringCount(inst);
         }
         return inst + '-' + sc;
     }
     function _splitKey(key) {
-        const parts = (typeof key === 'string' ? key : '').split('-');
-        const inst = parts[0] === 'bass' ? 'bass' : 'guitar';
-        return { instrument: inst, stringCount: Number(parts[1]) || (inst === 'bass' ? 4 : 6) };
+        const s = typeof key === 'string' ? key : '';
+        const idx = s.lastIndexOf('-');
+        const instRaw = idx > 0 ? s.slice(0, idx) : s;
+        const scRaw = idx > 0 ? s.slice(idx + 1) : '';
+        const inst = _normInstrument(instRaw);
+        return { instrument: inst, stringCount: Number(scRaw) || _defaultStringCount(inst) };
     }
 
     // The shape every consumer reads. `offsets` are per-string semitone offsets from
@@ -95,7 +108,9 @@
     function _resolveKey(instrument) {
         if (instrument && typeof instrument === 'object') return _keyOfResolved(instrument.instrument, instrument.stringCount);
         if (typeof instrument === 'string' && instrument) {
-            return instrument.indexOf('-') > 0 ? instrument : _keyOfResolved(instrument, null);
+            return (!_isBareInstrument(instrument) && instrument.indexOf('-') > 0)
+                ? instrument
+                : _keyOfResolved(instrument, null);
         }
         return _currentKey || _keyOf('guitar', 6);
     }
@@ -188,7 +203,9 @@
     // the player switches guitar<->bass / string count) so get() returns the right
     // instrument's tuning. Emits if the selection actually changed.
     function setCurrentInstrument(instrument, stringCount) {
-        const key = (typeof instrument === 'string' && instrument.indexOf('-') > 0) ? instrument : _keyOfResolved(instrument, stringCount);
+        const key = (typeof instrument === 'string' && !_isBareInstrument(instrument) && instrument.indexOf('-') > 0)
+            ? instrument
+            : _keyOfResolved(instrument, stringCount);
         _touched = true;          // an explicit selection must not be reverted by the async seed
         if (key === _currentKey) return get(key);
         _currentKey = key;
@@ -273,7 +290,7 @@
             .then(function (s) {
                 if (!s || _touched) return;   // nothing to seed, or a consumer already wrote — don't clobber
                 const inst = _normInstrument(s.instrument);
-                const sc = Number(s.string_count) || (inst === 'bass' ? 4 : 6);
+                const sc = Number(s.string_count) || _defaultStringCount(inst);
                 const key = _keyOf(inst, sc);
 
                 function commit(offsets) {

@@ -244,8 +244,8 @@ def save_settings(data: dict):
     if "instrument" in data:
         raw = data["instrument"]
         if raw is not None:
-            if not isinstance(raw, str) or raw not in ("guitar", "bass"):
-                return {"error": "instrument must be 'guitar' or 'bass'"}
+            if not isinstance(raw, str) or raw not in ("guitar", "bass", "carnatic-mandolin"):
+                return {"error": "instrument must be 'guitar', 'bass', or 'carnatic-mandolin'"}
             updates["instrument"] = raw
     if "string_count" in data:
         raw = data["string_count"]
@@ -303,7 +303,7 @@ def save_settings(data: dict):
         raw = data["active_instrument_profile"]
         if raw is not None:
             if not isinstance(raw, str) or raw not in PROFILE_IDS:
-                return {"error": "active_instrument_profile must be one of guitar-lead, guitar-rhythm, bass"}
+                return {"error": "active_instrument_profile must be one of guitar-lead, guitar-rhythm, bass, carnatic-mandolin"}
             updates["active_instrument_profile"] = raw
     appstate.config_dir.mkdir(parents=True, exist_ok=True)
     # Critical section — the read-merge-write must be atomic. FastAPI runs
@@ -455,8 +455,8 @@ def _validate_server_config_types(cfg: dict) -> str | None:
             return "server_config.reference_pitch must be a number between 430 and 450"
     if "instrument" in cfg:
         v = cfg["instrument"]
-        if v is not None and v not in ("guitar", "bass"):
-            return "server_config.instrument must be 'guitar' or 'bass'"
+        if v is not None and v not in ("guitar", "bass", "carnatic-mandolin"):
+            return "server_config.instrument must be 'guitar', 'bass', or 'carnatic-mandolin'"
     if "string_count" in cfg:
         v = cfg["string_count"]
         if v is not None and (isinstance(v, bool) or not isinstance(v, int) or not (4 <= v <= 8)):
@@ -483,7 +483,7 @@ def _validate_server_config_types(cfg: dict) -> str | None:
     if "active_instrument_profile" in cfg:
         v = cfg["active_instrument_profile"]
         if v is not None and (not isinstance(v, str) or v not in PROFILE_IDS):
-            return "server_config.active_instrument_profile must be one of guitar-lead, guitar-rhythm, bass"
+            return "server_config.active_instrument_profile must be one of guitar-lead, guitar-rhythm, bass, carnatic-mandolin"
     return None
 
 

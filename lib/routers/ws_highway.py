@@ -27,6 +27,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from song import (
     anchor_to_wire,
     arrangement_is_bass,
+    arrangement_is_carnatic_mandolin,
     arrangement_string_count,
     base_open_string_midis,
     chord_template_to_wire,
@@ -297,6 +298,30 @@ async def highway_ws(websocket: WebSocket, filename: str, arrangement: int = -1,
                             (i for i in bass_idxs
                              if (smart_names[i] if i < len(smart_names) else "") == "Bass"),
                             bass_idxs[0],
+                        )
+            elif sel_instrument.lower() == "carnatic-mandolin":
+                mandolin_idxs = [
+                    i
+                    for i, a in enumerate(song.arrangements)
+                    if arrangement_is_carnatic_mandolin(a)
+                    or "carnatic mandolin" in (smart_names[i] or "").lower().replace("_", " ").replace("-", " ")
+                ]
+                if mandolin_idxs:
+                    pref_mandolin = -1
+                    if pref:
+                        for i in mandolin_idxs:
+                            nm = (smart_names[i] if naming_mode == "smart" and i < len(smart_names)
+                                  else getattr(song.arrangements[i], "name", ""))
+                            if nm == pref:
+                                pref_mandolin = i
+                                break
+                    if pref_mandolin >= 0:
+                        best = pref_mandolin
+                    else:
+                        best = next(
+                            (i for i in mandolin_idxs
+                             if (smart_names[i] if i < len(smart_names) else "") == "Carnatic Mandolin"),
+                            mandolin_idxs[0],
                         )
             # User's default arrangement preference (only when instrument routing did not
             # already resolve a part — i.e. guitar, or a bass player with no bass part).

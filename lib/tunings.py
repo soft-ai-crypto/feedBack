@@ -171,7 +171,7 @@ def apply_reference_pitch(
     }
 
 
-PROFILE_IDS = ("guitar-lead", "guitar-rhythm", "bass")
+PROFILE_IDS = ("guitar-lead", "guitar-rhythm", "bass", "carnatic-mandolin")
 PROFILE_PATHWAYS = ("songs", "practice", "learn", "studio")
 DEFAULT_ACTIVE_INSTRUMENT_PROFILE = "guitar-lead"
 PROFILE_DEFAULTS: dict[str, dict] = {
@@ -201,6 +201,16 @@ PROFILE_DEFAULTS: dict[str, dict] = {
         "instrument": "bass",
         "role": "bass",
         "string_count": 4,
+        "tuning": "Standard",
+        "reference_pitch": DEFAULT_REFERENCE_PITCH,
+        "pathway": "songs",
+    },
+    "carnatic-mandolin": {
+        "id": "carnatic-mandolin",
+        "label": "Carnatic Mandolin",
+        "instrument": "carnatic-mandolin",
+        "role": "carnatic-mandolin",
+        "string_count": 5,
         "tuning": "Standard",
         "reference_pitch": DEFAULT_REFERENCE_PITCH,
         "pathway": "songs",
@@ -264,8 +274,8 @@ def normalize_instrument_profile(profile_id: str, raw) -> tuple[dict | None, str
         return None, f"instrument_profiles.{profile_id} must be an object"
 
     instrument = raw.get("instrument", base["instrument"])
-    if instrument not in ("guitar", "bass"):
-        return None, f"instrument_profiles.{profile_id}.instrument must be 'guitar' or 'bass'"
+    if instrument not in ("guitar", "bass", "carnatic-mandolin"):
+        return None, f"instrument_profiles.{profile_id}.instrument must be 'guitar', 'bass', or 'carnatic-mandolin'"
 
     try:
         string_count = int(raw.get("string_count", base["string_count"]))
@@ -328,8 +338,8 @@ def active_profile_id(raw) -> str:
 
 def profile_from_legacy_settings(cfg: dict) -> dict:
     """Build an active profile from the old flat settings keys."""
-    instrument = cfg.get("instrument") if cfg.get("instrument") in ("guitar", "bass") else "guitar"
-    fallback_sc = 4 if instrument == "bass" else 6
+    instrument = cfg.get("instrument") if cfg.get("instrument") in ("guitar", "bass", "carnatic-mandolin") else "guitar"
+    fallback_sc = 4 if instrument == "bass" else 5 if instrument == "carnatic-mandolin" else 6
     try:
         sc = int(cfg.get("string_count", fallback_sc))
     except (TypeError, ValueError, OverflowError):
@@ -341,7 +351,7 @@ def profile_from_legacy_settings(cfg: dict) -> dict:
     tuning = _valid_tuning_for_key(key, cfg.get("tuning", "Standard")) or "Standard"
     ref = _valid_reference_pitch(cfg.get("reference_pitch", DEFAULT_REFERENCE_PITCH)) or DEFAULT_REFERENCE_PITCH
     pathway = cfg.get("pathway") if cfg.get("pathway") in PROFILE_PATHWAYS else "songs"
-    profile_id = "bass" if instrument == "bass" else DEFAULT_ACTIVE_INSTRUMENT_PROFILE
+    profile_id = "bass" if instrument == "bass" else "carnatic-mandolin" if instrument == "carnatic-mandolin" else DEFAULT_ACTIVE_INSTRUMENT_PROFILE
     profile = dict(PROFILE_DEFAULTS[profile_id])
     profile.update({
         "instrument": instrument,
@@ -387,14 +397,24 @@ def apply_flat_instrument_patch_to_profiles(cfg: dict, updates: dict) -> dict:
         return out
     active = active_profile_id(out.get("active_instrument_profile"))
     if "instrument" in updates:
-        active = "bass" if updates["instrument"] == "bass" else "guitar-lead"
+        if updates["instrument"] == "bass":
+            active = "bass"
+        elif updates["instrument"] == "carnatic-mandolin":
+            active = "carnatic-mandolin"
+        else:
+            active = "guitar-lead"
         out["active_instrument_profile"] = active
     current = dict(out["instrument_profiles"][active])
 
     if "instrument" in updates:
         current["instrument"] = updates["instrument"]
         if "string_count" not in updates:
-            current["string_count"] = 4 if updates["instrument"] == "bass" else 6
+            if updates["instrument"] == "bass":
+                current["string_count"] = 4
+            elif updates["instrument"] == "carnatic-mandolin":
+                current["string_count"] = 5
+            else:
+                current["string_count"] = 6
     if "string_count" in updates:
         current["string_count"] = updates["string_count"]
     if "reference_pitch" in updates:
