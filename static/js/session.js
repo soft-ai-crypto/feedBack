@@ -232,6 +232,7 @@ export async function showScreen(id) {
         if (hadPlayableSong) window.feedBack.emit('song:stop', { time: stopTime || 0, screen: id });
         audio.pause();
         audio.src = '';
+        window.silentClock?.disarm?.();
         window._currentSongAudio = null;
         // Reloading any song later should get a fresh JUCE routing attempt.
         window._clearJuceRerouteMemo?.();
@@ -694,6 +695,7 @@ export async function playSong(filename, arrangement, options) {
     }
     audio.pause();
     audio.src = '';
+    window.silentClock?.disarm?.();
     // Stale until the incoming song's WS handler (window.highway.js) sets it again.
     window._currentSongAudio = null;
     // Fresh JUCE routing attempt for whatever song loads next.

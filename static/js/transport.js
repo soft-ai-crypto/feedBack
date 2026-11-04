@@ -158,9 +158,81 @@ export const jucePlayer = {
     },
 };
 
-export function _audioTime() { return window._juceMode ? jucePlayer.currentTime : audio.currentTime; }
+// Silent chart clock for songs whose song_info has no audio_url.
+// Same interpolation as jucePlayer (position + performance.now() anchor +
+// rate) without any native/HTML5 audio calls. Armed only from the highway
+// song_info handler; guitar songs with an audio_url never touch this.
+export const silentClock = {
+    _armed: false,
+    _running: false,
+    _pos: 0,
+    _dur: 0,
+    _pollAt: 0,
+    _speed: 1,
+    get currentTime() {
+        if (!this._running) return this._pos;
+        const elapsed = (performance.now() - this._pollAt) / 1000;
+        return Math.min(this._pos + elapsed * this._speed, this._dur > 0 ? this._dur : Infinity);
+    },
+    get duration() { return this._dur; },
+    arm(duration) {
+        this._armed = true;
+        this._running = false;
+        this._pos = 0;
+        this._dur = (Number.isFinite(duration) && duration > 0) ? duration : 0;
+        this._pollAt = 0;
+        this._speed = 1;
+    },
+    setDuration(duration) {
+        if (!this._armed) return;
+        if (Number.isFinite(duration) && duration > 0) this._dur = duration;
+    },
+    play() {
+        if (!this._armed) return false;
+        this._pollAt = performance.now();
+        this._running = true;
+        return true;
+    },
+    pause() {
+        if (!this._armed) return;
+        this._pos = this.currentTime;
+        this._pollAt = performance.now();
+        this._running = false;
+    },
+    seek(s) {
+        const t = Number(s);
+        if (!Number.isFinite(t)) return;
+        const clamped = this._dur > 0 ? Math.min(Math.max(0, t), this._dur) : Math.max(0, t);
+        this._pos = clamped;
+        this._pollAt = performance.now();
+    },
+    setRate(rate) {
+        this._pos = this.currentTime;
+        this._pollAt = performance.now();
+        this._speed = rate;
+    },
+    disarm() {
+        this._armed = false;
+        this._running = false;
+        this._pos = 0;
+        this._dur = 0;
+        this._pollAt = 0;
+        this._speed = 1;
+    },
+};
+window.silentClock = silentClock;
 
-export function _audioDuration() { return window._juceMode ? jucePlayer.duration : audio.duration; }
+export function _audioTime() {
+    const silent = window.silentClock;
+    if (silent && silent._armed) return silent.currentTime;
+    return window._juceMode ? jucePlayer.currentTime : audio.currentTime;
+}
+
+export function _audioDuration() {
+    const silent = window.silentClock;
+    if (silent && silent._armed) return silent.duration;
+    return window._juceMode ? jucePlayer.duration : audio.duration;
+}
 
 // Canonical payload for song:play/song:pause/song:ended. Plugins anchor
 // their own clocks against `perfNow` (a monotonic timestamp at the same
@@ -275,6 +347,7 @@ export async function _audioSeek(s, reason) {
         if (gen !== _audioSeekGen) return { completed: false, from: NaN, to: NaN };
         const from = _audioTime();
         if (window._juceMode) await _juceSeekWithTimeout(s);
+        else if (window.silentClock && window.silentClock._armed) window.silentClock.seek(s);
         else audio.currentTime = s;
         if (gen !== _audioSeekGen) return { completed: false, from, to: NaN };
         // Read the verified post-seek position rather than the requested `s`
@@ -318,6 +391,24 @@ export async function togglePlay() {
         } else {
             const started = await jucePlayer.play();
             if (!started) return; // startBacking() failed — IPC error already logged
+            S.isPlaying = true;
+            setPlayButtonState(true);
+            window.feedBack.isPlaying = true;
+            const payload = _songEventPayload();
+            window.feedBack.emit('song:play', payload);
+            window.feedBack.emit('song:resume', payload);
+        }
+        return;
+    }
+    if (window.silentClock && window.silentClock._armed) {
+        if (S.isPlaying) {
+            window.silentClock.pause();
+            S.isPlaying = false;
+            setPlayButtonState(false);
+            window.feedBack.isPlaying = false;
+            window.feedBack.emit('song:pause', _songEventPayload());
+        } else {
+            window.silentClock.play();
             S.isPlaying = true;
             setPlayButtonState(true);
             window.feedBack.isPlaying = true;

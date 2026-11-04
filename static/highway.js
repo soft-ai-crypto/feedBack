@@ -68,6 +68,7 @@ import {
     getChordTemplateInfo,
     strumGroupBuckets,
 } from './js/highway-draw.js';
+import { silentClock } from './js/transport.js';
 
 function createHighway() {
   // R3c: per-instance mutable state in one object, so extracted renderer/ws
@@ -2081,6 +2082,13 @@ function createHighway() {
                                     document.body.appendChild(banner);
                                 }
     
+                                if (!msg.audio_url) {
+                                    const d = Number(msg.duration);
+                                    silentClock.arm(d > 0 ? d : 0);
+                                } else {
+                                    silentClock.disarm();
+                                }
+
                                 if (msg.audio_url) {
                                     const audio = document.getElementById('audio');
                                     const audioFilename = msg.audio_url.split('/').pop();
@@ -2457,6 +2465,26 @@ function createHighway() {
                             break;
                         case 'ready':
                             hwState.ready = true;
+                            if (silentClock._armed) {
+                                let end = 0;
+                                for (const n of hwState.notes) {
+                                    const t = (n.t || 0) + (n.sus || 0);
+                                    if (t > end) end = t;
+                                }
+                                for (const c of hwState.chords) {
+                                    const start = c.t || 0;
+                                    let sus = c.sus || 0;
+                                    if (Array.isArray(c.notes)) {
+                                        for (const cn of c.notes) {
+                                            if ((cn.sus || 0) > sus) sus = cn.sus;
+                                        }
+                                    }
+                                    const t = start + sus;
+                                    if (t > end) end = t;
+                                }
+                                const d = Math.max(silentClock.duration || 0, end);
+                                if (d > 0) silentClock.setDuration(d);
+                            }
                             if (hwState.handShapes.length) {
                                 hwState.handShapes.sort((a, b) => a.start_time - b.start_time);
                             }

@@ -43,9 +43,9 @@ export function _countdownBeforeSongEnabled() {
 
 export function _curPlaybackSpeed() {
     try {
-        return window._juceMode
-            ? ((window.jucePlayer && window.jucePlayer._speed) || 1)
-            : (document.getElementById('audio')?.playbackRate || 1);
+        if (window._juceMode) return ((window.jucePlayer && window.jucePlayer._speed) || 1);
+        if (window.silentClock && window.silentClock._armed) return window.silentClock._speed || 1;
+        return (document.getElementById('audio')?.playbackRate || 1);
     } catch (_) { return 1; }
 }
 
@@ -123,6 +123,8 @@ export function setSpeed(v) {
             // setBackingPreservePitch, so this is safe to ship unconditionally.
             .then(() => juceAudio?.setBackingPreservePitch?.(true))
             .catch(err => console.warn('[setSpeed] backing speed/preserve-pitch failed:', err));
+    } else if (window.silentClock && window.silentClock._armed) {
+        window.silentClock.setRate(rate);
     } else {
         audio.playbackRate = rate;
     }
@@ -143,6 +145,7 @@ export function _resetPlaybackSpeedForNewSong() {
     if (speedSlider) speedSlider.value = 100;
     audio.playbackRate = 1;
     window.jucePlayer?.setRate?.(1);
+    window.silentClock?.setRate?.(1);
     const juceAudio = window.feedBackDesktop?.audio;
     Promise.resolve()
         .then(() => juceAudio?.setBackingSpeed?.(1))

@@ -1813,21 +1813,25 @@ setInterval(() => {
     let ct = _audioTime();
     const dur = _audioDuration();
     if (dur && !isCountingIn()) {
-        // JUCE end-of-track: HTML5 fires 'ended'; JUCE needs a manual check
-        if (window._juceMode && S.isPlaying && ct >= dur) {
+        // JUCE / silent-clock end-of-track: HTML5 fires 'ended'; these clocks need a manual check
+        if ((window._juceMode || (window.silentClock && window.silentClock._armed)) && S.isPlaying && ct >= dur) {
             S.isPlaying = false;
             setPlayButtonState(false);
             window.feedBack.isPlaying = false;
             window.feedBack.emit('song:ended', _songEventPayload());
-            jucePlayer.pause().catch((err) => console.warn('[app] end-of-track pause error:', err));
+            if (window._juceMode) {
+                jucePlayer.pause().catch((err) => console.warn('[app] end-of-track pause error:', err));
+            } else {
+                window.silentClock.pause();
+            }
         }
         // A-B loop: count-in then seek back to A
         else if (loopA !== null && loopB !== null && ct >= loopB) {
             S.lastAudioTime = loopB;
             startCountIn();
         }
-        // Detect and fix audio time jumps (browser seeking bug; skip for JUCE — position is polled)
-        else if (!window._juceMode && S.isPlaying && Math.abs(ct - S.lastAudioTime) > 30 && S.lastAudioTime > 0) {
+        // Detect and fix audio time jumps (browser seeking bug; skip for JUCE and the silent clock)
+        else if (!window._juceMode && !(window.silentClock && window.silentClock._armed) && S.isPlaying && Math.abs(ct - S.lastAudioTime) > 30 && S.lastAudioTime > 0) {
             console.warn(`Audio time jumped from ${S.lastAudioTime.toFixed(1)} to ${ct.toFixed(1)}, resetting`);
             _audioSeek(S.lastAudioTime, 'jump-fix');
             // Treat the corrected position as canonical for the rest of this
