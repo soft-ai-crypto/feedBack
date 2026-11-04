@@ -536,6 +536,10 @@ window.feedBack.on('song:ready', () => {
     // begins playback off the player.
     const start = () => {
         if (S.isPlaying) return;
+        // MIDI / no-audio charts arm silentClock before song:ready. Don't auto-press
+        // Play — the user starts the clock with the Play button. Songs with audio
+        // never set _armed, so this is a no-op for them.
+        if (window.silentClock && window.silentClock._armed) return;
         if (!document.getElementById('player')?.classList.contains('active')) { hideSongCreditsOverlay(); return; }
         if (_countdownBeforeSongEnabled()) {
             Promise.resolve(startSongCountIn()).catch((err) => console.warn('[app] song count-in failed:', err));
