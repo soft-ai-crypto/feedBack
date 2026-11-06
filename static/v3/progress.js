@@ -114,6 +114,8 @@
 
     function addPathCard(available) {
         if (!available || !available.length) return '';
+        available = available.filter((p) => p.id !== 'bass');
+        if (!available.length) return '';
         return '<div class="bg-fb-card/80 backdrop-blur rounded-xl p-5 border border-fb-border/50 border-dashed">' +
             '<h3 class="text-sm font-semibold text-fb-textDim uppercase tracking-wider mb-3">Start a new path</h3>' +
             '<div class="flex flex-wrap gap-2">' +

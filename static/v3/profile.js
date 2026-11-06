@@ -499,6 +499,7 @@
                         (data.paths || []).map((p) => ({ id: p.id, name: p.name })));
                 }
             } catch (e) { /* offline — leave empty, Next stays disabled */ }
+            available = available.filter((p) => p.id !== 'bass');
             pathsAvailable = available.length > 0;
             host.innerHTML = available.map((p) =>
                 '<button type="button" data-ob-path="' + esc(p.id) + '" ' +
