@@ -63,6 +63,13 @@ class Note:
     # finger); spelled-out `hand` on the wire because `rh` is taken.
     # Default-omitted on the wire; older readers ignore it.
     hand: str | None = None
+    # Carnatic gamaka — default-omitted; validated on emit/decode so junk
+    # never rides the wire. `gamaka` is one of kam/jar/sph/nok/ori/pra/and/
+    # mur/rav/kha (None = unset); `gamaka_up`/`gamaka_down` are integer
+    # extents (-1 unset).
+    gamaka: str | None = None
+    gamaka_up: int = -1
+    gamaka_down: int = -1
 
 
 @dataclass
@@ -289,6 +296,12 @@ def note_to_wire(n: Note) -> dict:
     # directly-constructed Note can't put junk ('LH', True, …) on the wire.
     if n.hand in ("lh", "rh"):
         out["hand"] = n.hand
+    if n.gamaka in ("kam", "jar", "sph", "nok", "ori", "pra", "and", "mur", "rav", "kha"):
+        out["gm"] = n.gamaka
+    if n.gamaka_up >= 0:
+        out["gmu"] = n.gamaka_up
+    if n.gamaka_down >= 0:
+        out["gmd"] = n.gamaka_down
     return out
 
 
@@ -574,6 +587,9 @@ def note_from_wire(d: dict, time: float | None = None) -> Note:
         # (junk, wrong case, bools) falls back to unassigned rather than
         # poisoning downstream hand-split/practice logic.
         hand=d.get("hand") if d.get("hand") in ("lh", "rh") else None,
+        gamaka=d.get("gm") if d.get("gm") in ("kam", "jar", "sph", "nok", "ori", "pra", "and", "mur", "rav", "kha") else None,
+        gamaka_up=_wire_int_optional(d.get("gmu"), -1),
+        gamaka_down=_wire_int_optional(d.get("gmd"), -1),
     )
 
 
