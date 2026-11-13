@@ -14169,6 +14169,30 @@
             return Math.sin(elapsed * Math.PI / VIBRATO_HALF_WAVE_S);
         }
 
+        function gamakaSemisAtTime(n, dt) {
+            const GAMAKA_KAM_SEMIS = 0.25;
+            const GAMAKA_AND_SWINGS_PER_SEC = 1.5;
+            if (!n || !n.gm || !(n.sus > 0) || dt < 0 || dt > n.sus) return 0;
+            const p = dt / n.sus;
+            if (n.gm === 'kam') {
+                const cycles = Math.max(2, Math.round(n.sus * 5));
+                return GAMAKA_KAM_SEMIS * (1 - Math.cos(2 * Math.PI * cycles * p)) / 2;
+            }
+            if (n.gm === 'and') {
+                if (!(n.gmu > 0)) return 0;
+                const swings = Math.max(1, Math.round(n.sus * GAMAKA_AND_SWINGS_PER_SEC));
+                return n.gmu * (1 - Math.cos(2 * Math.PI * swings * p)) / 2;
+            }
+            if (n.gm === 'nok') {
+                if (!(n.gmu > 0)) return 0;
+                const g = Math.min(0.15, n.sus * 0.4);
+                if (dt >= g) return 0;
+                const q = dt / g;
+                return n.gmu * (1 - (q * q * (3 - 2 * q)));
+            }
+            return 0;
+        }
+
         function techniqueYOffsetWorld(n, chartTime) {
             if (!(n?.sus > 0)) return 0;
             const bendSemi = bendSemisAtTime(n, chartTime);
@@ -14373,6 +14397,12 @@
                 ? (_leftyCached ? -1 : 1) * slideOffsetWorldX(n, now, slideSt)
                 : 0;
             const x = xBase + slideXNow;
+            const _gmSemis = gamakaSemisAtTime(n, now - n.t);
+            let gemX = x;
+            if (_gmSemis !== 0) {
+                const f = n.f === 0 ? 0 : n.f;
+                gemX = x + (xFretMid(f + _gmSemis) - xFretMid(f));
+            }
             const isHarm = n.hm || n.hp;
 
             // Open chord notes: wide default mesh is capped to chord frame width.
@@ -14684,7 +14714,7 @@
                         const glow = pAccentHalo.get();
                         glow.material = sh.mat;
                         glow.rotation.z = rZ;
-                        glow.position.set(x, y + techniqueYNow, noteZ - sh.zK * K);
+                        glow.position.set(gemX, y + techniqueYNow, noteZ - sh.zK * K);
                         if (n.f === 0) {
                             // Inside a chord/arpeggio frame: bloom only vertically so the
                             // halo doesn't burst past the chord box edges horizontally.
@@ -14714,7 +14744,7 @@
                 // prior core use). Outline always uses the plain box.
                 outline.geometry = gNote;
                 outline.renderOrder = renderOrderForLayerAtZ(noteZ, 'NOTE_OUTLINE');
-                outline.position.set(x, y + techniqueYNow, noteZ);
+                outline.position.set(gemX, y + techniqueYNow, noteZ);
                 outline.rotation.z = approachRot;
                 const ndRim = 1.1;
                 if (n.f === 0) {
@@ -14735,7 +14765,7 @@
                     const edges = pNoteEdge.get();
                     edges.material = _ndFaceMat;
                     edges.renderOrder = renderOrderForLayerAtZ(noteZ, 'TECHNIQUE_MARKER');
-                    edges.position.set(x, y + techniqueYNow, noteZ + 0.001);
+                    edges.position.set(gemX, y + techniqueYNow, noteZ + 0.001);
                     edges.rotation.z = approachRot;
                     if (n.f === 0) {
                         edges.scale.set(
@@ -14756,7 +14786,7 @@
                 // Gradient gem body for strings 0..5; flat box otherwise.
                 core.geometry = (!n.ac && gNoteGrad[s]) ? gNoteGrad[s] : gNote;
                 core.renderOrder = renderOrderForLayerAtZ(noteZ, 'NOTE_CORE');
-                core.position.set(x, y + techniqueYNow, noteZ + 0.001);
+                core.position.set(gemX, y + techniqueYNow, noteZ + 0.001);
                 core.rotation.z = approachRot;
                 if (n.f === 0) {
                     core.scale.set(
