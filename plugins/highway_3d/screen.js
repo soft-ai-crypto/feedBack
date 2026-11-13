@@ -14174,6 +14174,8 @@
             const GAMAKA_AND_SWINGS_PER_SEC = 1.5;
             const GAMAKA_FRONT_SECS = 0.1;
             const GAMAKA_MUR_SECS = 0.25;
+            const GAMAKA_ORI_TAIL_SECS = 0.2;
+            const GAMAKA_ORI_SETTLE_SECS = 0.15;
             if (!n || !n.gm || !(n.sus > 0) || dt < 0 || dt > n.sus) return 0;
             const p = dt / n.sus;
             if (n.gm === 'kam') {
@@ -14210,6 +14212,16 @@
                 if (dt >= g) return 0;
                 const k = Math.floor(dt / (g / 5));
                 return k === 1 ? n.gmu : k === 3 ? -n.gmd : 0;
+            }
+            if (n.gm === 'ori') {
+                if (!(n.gmu > 0)) return 0;
+                const g = Math.min(GAMAKA_ORI_TAIL_SECS, n.sus * 0.3);
+                const settle = Math.min(GAMAKA_ORI_SETTLE_SECS, n.sus * 0.2);
+                const flickStart = n.sus - settle - g;
+                const flickEnd = n.sus - settle;
+                if (dt <= flickStart || dt >= flickEnd) return 0;
+                const q = (dt - flickStart) / g;
+                return n.gmu * Math.sin(Math.PI * q);
             }
             return 0;
         }
