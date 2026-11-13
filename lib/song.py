@@ -65,11 +65,12 @@ class Note:
     hand: str | None = None
     # Carnatic gamaka — default-omitted; validated on emit/decode so junk
     # never rides the wire. `gamaka` is one of kam/jar/sph/nok/ori/pra/and/
-    # mur/rav/kha (None = unset); `gamaka_up`/`gamaka_down` are integer
+    # mur/rav/kha (None = unset); `gamaka_up`/`gamaka_down`/`gamaka_up2` are integer
     # extents (-1 unset).
     gamaka: str | None = None
     gamaka_up: int = -1
     gamaka_down: int = -1
+    gamaka_up2: int = -1
 
 
 @dataclass
@@ -302,6 +303,8 @@ def note_to_wire(n: Note) -> dict:
         out["gmu"] = n.gamaka_up
     if n.gamaka_down >= 0:
         out["gmd"] = n.gamaka_down
+    if n.gamaka_up2 >= 0:
+        out["gmu2"] = n.gamaka_up2
     return out
 
 
@@ -590,6 +593,7 @@ def note_from_wire(d: dict, time: float | None = None) -> Note:
         gamaka=d.get("gm") if d.get("gm") in ("kam", "jar", "sph", "nok", "ori", "pra", "and", "mur", "rav", "kha") else None,
         gamaka_up=_wire_int_optional(d.get("gmu"), -1),
         gamaka_down=_wire_int_optional(d.get("gmd"), -1),
+        gamaka_up2=_wire_int_optional(d.get("gmu2"), -1),
     )
 
 
