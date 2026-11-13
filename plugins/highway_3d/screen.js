@@ -14223,6 +14223,13 @@
                 const q = (dt - flickStart) / g;
                 return n.gmu * Math.sin(Math.PI * q);
             }
+            if (n.gm === 'rav') {
+                if (!(n.gmu2 > 0) || !(n.gmu > 0)) return 0;
+                const g = Math.min(GAMAKA_MUR_SECS, n.sus * 0.5);
+                if (dt >= g) return 0;
+                const k = Math.floor(dt / (g / 3));
+                return k === 0 ? n.gmu2 : k === 1 ? n.gmu : 0;
+            }
             return 0;
         }
 
