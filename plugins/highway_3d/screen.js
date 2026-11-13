@@ -14172,6 +14172,8 @@
         function gamakaSemisAtTime(n, dt) {
             const GAMAKA_KAM_SEMIS = 0.25;
             const GAMAKA_AND_SWINGS_PER_SEC = 1.5;
+            const GAMAKA_FRONT_SECS = 0.1;
+            const GAMAKA_MUR_SECS = 0.25;
             if (!n || !n.gm || !(n.sus > 0) || dt < 0 || dt > n.sus) return 0;
             const p = dt / n.sus;
             if (n.gm === 'kam') {
@@ -14189,6 +14191,25 @@
                 if (dt >= g) return 0;
                 const q = dt / g;
                 return n.gmu * (1 - (q * q * (3 - 2 * q)));
+            }
+            if (n.gm === 'sph') {
+                if (!(n.gmd > 0)) return 0;
+                const g = Math.min(GAMAKA_FRONT_SECS, n.sus * 0.3);
+                if (dt < g) return -n.gmd;
+                return 0;
+            }
+            if (n.gm === 'pra') {
+                if (!(n.gmu > 0)) return 0;
+                const g = Math.min(GAMAKA_FRONT_SECS, n.sus * 0.3);
+                if (dt < g) return n.gmu;
+                return 0;
+            }
+            if (n.gm === 'mur') {
+                if (!(n.gmu > 0) || !(n.gmd > 0)) return 0;
+                const g = Math.min(GAMAKA_MUR_SECS, n.sus * 0.5);
+                if (dt >= g) return 0;
+                const k = Math.floor(dt / (g / 5));
+                return k === 1 ? n.gmu : k === 3 ? -n.gmd : 0;
             }
             return 0;
         }
