@@ -14904,7 +14904,7 @@
                         const _susOlMat = _ndState === 'miss' ? mMissOutline
                             : _ndGood ? (mHitBright[s] ?? mHitSusOutline)
                             : mSusOutline;
-                        const emitSusStrip = (xCenter, segLen, zCenter) => {
+                        const emitSusStrip = (xCenter, segLen, zCenter, twScale = 1, thScale = 1) => {
                             // Same depth-bucket scheme as chord frames, using the
                             // ordered sustain-trail layer so same-depth frames win
                             // while closer trail segments still beat farther frames.
@@ -14915,18 +14915,38 @@
                                 trOut.material = _susOlMat;
                                 trOut.renderOrder = trailRenderOrder;
                                 trOut.position.set(xOff, y, zCenter);
-                                trOut.scale.set(tw + 0.4 * K, th + 0.4 * K, segLen);
+                                trOut.scale.set((tw + 0.4 * K) * twScale, (th + 0.4 * K) * thScale, segLen);
                                 const tr = pSus.get();
                                 tr.material = _ndState ? mGlow[s] : mSus[s];
                                 tr.renderOrder = trailRenderOrder + 0.0005;
                                 tr.position.set(xOff, y, zCenter);
-                                tr.scale.set(tw, th, segLen);
+                                tr.scale.set(tw * twScale, th * thScale, segLen);
                             }
                         };
                         if (!ribbonSusTrail) {
-                            const len = sliceDur * TS;
-                            const zPos = dZ(susStart - now) - len / 2;
-                            emitSusStrip(x, len, zPos);
+                            if (n.gm === 'kha') {
+                                const cutStart = n.t + 0.8 * n.sus;
+                                const gap = Math.min(0.04, n.sus * 0.05);
+                                const visEnd = susStart + sliceDur;
+                                const aEnd = Math.min(visEnd, cutStart - gap);
+                                if (aEnd > susStart) {
+                                    const durA = aEnd - susStart;
+                                    const lenA = durA * TS;
+                                    const zA = dZ(susStart - now) - lenA / 2;
+                                    emitSusStrip(x, lenA, zA);
+                                }
+                                const bStart = Math.max(susStart, cutStart);
+                                if (visEnd > bStart) {
+                                    const durB = visEnd - bStart;
+                                    const lenB = durB * TS;
+                                    const zB = dZ(bStart - now) - lenB / 2;
+                                    emitSusStrip(x, lenB, zB, 0.55, 0.55);
+                                }
+                            } else {
+                                const len = sliceDur * TS;
+                                const zPos = dZ(susStart - now) - len / 2;
+                                emitSusStrip(x, len, zPos);
+                            }
                         } else {
                             // Same depth-based renderOrder as box trail — ribbon center
                             // at susStart + sliceDur/2, using TS so it matches dZ().
