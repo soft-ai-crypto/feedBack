@@ -2,6 +2,9 @@ window._tunerUI = function(state, actions) {
     const _AUTO_TARGET_HYSTERESIS_CENTS = 40;
     let _lastAutoTargetFreq = null;
     let _lastTuningRef = null;
+    // Keep the last good note/cents on screen briefly after a faded pluck.
+    const _NOTE_HOLD_MS = 1000;
+    let _lastGoodNoteAt = 0;
 
     // Octave-aware nearest-string match. YIN frequently reports a sub-octave on
     // low strings (D1 instead of D2) and a common sub-harmonic on polyphonic
@@ -383,6 +386,12 @@ window._tunerUI = function(state, actions) {
         // below into NaN cents and a garbage readout.
         const referencePitch = state.referencePitch || 440;
         if (smoothedFreq === null || !Number.isFinite(smoothedFreq) || smoothedFreq <= 0) {
+            if (Date.now() - _lastGoodNoteAt < _NOTE_HOLD_MS) {
+                if (window.feedBack && window.feedBack.emit) {
+                    window.feedBack.emit('tuner:frame', { note: null, cents: 0, freq: 0, hasSignal: false });
+                }
+                return;
+            }
             _lastAutoTargetFreq = null;
             if (state.activeViz) state.activeViz.update(null, 0, 0, vizMode, null, referencePitch);
             _syncStringHighlight(state.manualTargetFreq);
@@ -391,6 +400,7 @@ window._tunerUI = function(state, actions) {
             }
             return;
         }
+        _lastGoodNoteAt = Date.now();
 
         // Reset the committed target when the tuning selection changes.
         if (state.selectedTuning !== _lastTuningRef) {
