@@ -22,6 +22,7 @@
     const DONE_KEY = (inst) => `input_setup.done.${inst}`;
     const INSTRUMENTS = {
         guitar: { label: 'Guitar', mode: 'audio' },
+        'carnatic-mandolin': { label: 'Carnatic Mandolin', mode: 'audio' },
         keys: { label: 'Keys / Piano', mode: 'midi' },
         piano: { label: 'Keys / Piano', mode: 'midi' },
         drums: { label: 'Drums', mode: 'midi' },
