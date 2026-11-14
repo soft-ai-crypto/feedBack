@@ -707,8 +707,8 @@ export function _onNamingModeChange(value) {
 
 function _getArrangements() {
     return _getArrangementNamingMode() === 'smart'
-        ? ['Lead', 'Rhythm']
-        : ['Lead', 'Rhythm', 'Combo'];
+        ? ['Lead', 'Rhythm', 'Carnatic Mandolin']
+        : ['Lead', 'Rhythm', 'Carnatic Mandolin', 'Combo'];
 }
 
 function _arrangementBadgeHtml(arrangement, nm) {

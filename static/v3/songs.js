@@ -43,7 +43,7 @@
         ['difficulty', 'Difficulty (easiest first)'], ['difficulty-desc', 'Difficulty (hardest first)'],
     ];
     const FORMATS = [['', 'All formats'], ['sloppak', 'Feedpak'], ['loose', 'Folder']];
-    const ARRANGEMENTS = ['Lead', 'Rhythm', 'Bass', 'Combo', 'Vocals'];
+    const ARRANGEMENTS = ['Lead', 'Rhythm', 'Carnatic Mandolin', 'Bass', 'Combo', 'Vocals'];
     const STEMS = ['guitar', 'bass', 'drums', 'vocals', 'piano', 'other'];
     const PAGE_SIZE = 24;
     // Extra rows rendered above/below the viewport so a fast scroll doesn't flash

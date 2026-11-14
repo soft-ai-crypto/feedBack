@@ -3526,7 +3526,7 @@ class MetadataDB:
     # malformed query string can't push arbitrary text through to SQL —
     # parameters are bound, but capping the input space is still cheap
     # defense-in-depth (see feedBack#129).
-    _ALLOWED_ARRANGEMENT_NAMES = {"Lead", "Rhythm", "Bass", "Combo"}
+    _ALLOWED_ARRANGEMENT_NAMES = {"Lead", "Rhythm", "Bass", "Combo", "Carnatic Mandolin"}
     # Per-smart-type list of (sql_op, sql_param) pairs appended to the SQL
     # name-fallback branch (key-absent smart_name). Covers legacy raw names
     # and load_song()'s synthesised display names that map to each smart type.
