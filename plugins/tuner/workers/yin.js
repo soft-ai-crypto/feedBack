@@ -22,7 +22,7 @@ function _yinDetect(buffer, sampleRate) {
     let rms = 0;
     for (let i = 0; i < buffer.length; i++) rms += buffer[i] * buffer[i];
     rms = Math.sqrt(rms / buffer.length);
-    if (rms < 0.01) return { freq: 0, confidence: 0, rms };
+    if (rms < 0.003) return { freq: 0, confidence: 0, rms }; // silence cutoff, lowered so quiet upper strings register
 
     let runningSum = 0;
     yinBuffer[0] = 1;

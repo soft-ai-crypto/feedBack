@@ -47,7 +47,7 @@
 
     function _handleYinResult(result) {
         const rms = result ? result.rms : 0;
-        const hasSignal = rms > 0.01;
+        const hasSignal = rms > 0.003; // silence cutoff, lowered so quiet upper strings register
 
         if (!result || (!hasSignal && result.confidence < 0.5) || (result.freq < _TUNER_MIN_DETECTABLE_HZ && result.freq !== 0)) {
             _validFrameCount = 0; _freqHistory = []; _lastFreq = 0;
