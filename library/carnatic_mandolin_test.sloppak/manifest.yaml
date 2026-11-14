@@ -1,0 +1,16 @@
+title: Carnatic Mandolin Test
+artist: FeedBack
+duration: 4.0
+arrangements:
+- id: carnatic_mandolin
+  name: Carnatic Mandolin
+  file: arrangements/carnatic_mandolin.json
+  tuning:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  capo: 0
+album: ''
+year: 0

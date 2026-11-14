@@ -1,0 +1,8 @@
+title: Carnatic Mandolin Test
+artist: FeedBack
+duration: 4.0
+arrangements:
+  - name: Carnatic Mandolin
+    file: arrangements/mandolin.json
+    tuning: [0, 0, 0, 0, 0]
+    capo: 0

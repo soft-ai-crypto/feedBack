@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carnatic Swara Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.383.0/dist/umd/lucide.min.js"></script>
+<style>
+*,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb;margin:0;padding:0}
+html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif}
+body{margin:0;line-height:inherit}
+h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:1em}
+button,input,select,textarea{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}
+button,select{text-transform:none}
+button,[type=button]{-webkit-appearance:button;background-color:transparent;background-image:none}
+button{cursor:pointer}
+ul{list-style:none;margin:0;padding:0}
+svg{display:block;vertical-align:middle}
+[hidden]{display:none}
+.absolute{position:absolute}.relative{position:relative}.top-0{top:0}.right-0{right:0}
+.flex{display:flex}.grid{display:grid}.hidden{display:none}.flex-1{flex:1 1 0%}.flex-wrap{flex-wrap:wrap}
+.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.content-start{align-content:flex-start}
+.items-center{align-items:center}.items-end{align-items:flex-end}.justify-between{justify-content:space-between}.justify-end{justify-content:flex-end}
+.place-items-center{place-items:center}
+.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}
+.p-1{padding:.25rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-4{padding:1rem}.pt-2{padding-top:.5rem}.pr-14{padding-right:3.5rem}
+.mx-auto{margin-left:auto;margin-right:auto}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.mb-2{margin-bottom:.5rem}
+.ml-2{margin-left:.5rem}.ml-auto{margin-left:auto}.mr-2{margin-right:.5rem}
+.w-12{width:3rem}.w-full{width:100%}.w-fit{width:fit-content}.h-12{height:3rem}.min-h-screen{min-height:100vh}
+.min-w-\[12rem\]{min-width:12rem}.min-w-\[14rem\]{min-width:14rem}.max-w-\[1500px\]{max-width:1500px}
+.overflow-x-auto{overflow-x:auto}.rounded-lg{border-radius:.5rem}.rounded-2xl{border-radius:1rem}
+.text-xs{font-size:.75rem;line-height:1rem}.text-sm{font-size:.875rem;line-height:1.25rem}
+.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}
+.text-xl{font-size:1.25rem;line-height:1.75rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}
+.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}.font-semibold{font-weight:600}
+.leading-relaxed{line-height:1.625}.cursor-pointer{cursor:pointer}
+@media(min-width:640px){.sm\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:768px){.md\:p-8{padding:2rem}.md\:text-4xl{font-size:2.25rem;line-height:2.5rem}.md\:grid-cols-\[320px_1fr\]{grid-template-columns:320px 1fr}}
+:root{--bg:#f6f7f9;--panel:#ffffff;--ink:#0f172a;--mute:#5b6678;--line:#e2e8f0;--brass:#4f46e5;--jade:#0f766e;--red:#b42318;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0f17;--panel:#121826;--ink:#e6e9f0;--mute:#9aa4b6;--line:#232c3d;--brass:#8b93ff;--jade:#4fd1b8;--red:#f0867a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b0f17;--panel:#121826;--ink:#e6e9f0;--mute:#9aa4b6;--line:#232c3d;--brass:#8b93ff;--jade:#4fd1b8;--red:#f0867a;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:'Instrument Sans',system-ui,sans-serif}
+h1,h2{letter-spacing:-.02em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.in{width:100%;background:transparent;border:1px solid var(--line);border-radius:10px;padding:.4rem .6rem;color:var(--ink)}
+.in:focus-visible,button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.lb{font-size:.85rem;color:var(--mute);display:block;margin-bottom:.2rem}
+.btn{display:inline-flex;align-items:center;gap:.45rem;border:1px solid var(--line);border-radius:999px;padding:.55rem 1.1rem;font-weight:600;transition:transform .1s}.btn:active{transform:scale(.96)}.btn svg{width:16px;height:16px}
+.swchip{display:inline-block;margin:0 .3rem .3rem 0;padding:.12rem .6rem;border-radius:999px;font-weight:600;font-size:.8rem;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 20%,transparent)}
+#now{min-width:3.4rem;text-align:center;padding:.3rem .9rem;border-radius:999px;font-weight:700;border:1px solid var(--line);color:var(--mute)}
+.btn.pri{background:var(--brass);color:var(--bg);border-color:var(--brass)}
+body,.card,.in,.btn,.swchip{transition:background-color .3s ease,color .3s ease,border-color .3s ease,box-shadow .25s ease,transform .15s ease,filter .2s ease}
+.btn:hover{transform:translateY(-1px);border-color:var(--brass);box-shadow:0 6px 16px -10px var(--brass)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn:active{transform:scale(.97)}
+.card:hover{box-shadow:0 14px 36px -22px rgba(0,0,0,.45)}
+.in:hover{border-color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.tab.on{background:var(--brass);color:var(--bg);border-color:var(--brass)}
+.tabs{display:flex;min-width:max-content;padding:.25rem 0}
+#tab-studio .grid>*,#tab-stage.grid>*{min-width:0}
+.tc{display:flex;flex-direction:column;align-items:center;min-width:36px;cursor:pointer;border-radius:8px}
+.tc i{display:flex;align-items:center;justify-content:center;height:24px;width:100%;font-style:normal;font-size:.85rem;background:linear-gradient(var(--mute),var(--mute)) center/100% 1px no-repeat}
+.tc i b{background:var(--panel);padding:0 .25rem;font-weight:700}
+.tc sup{font-size:.85rem;vertical-align:baseline;color:var(--brass);margin-right:1px;font-weight:700}
+.tc s{height:30px;display:flex;align-items:center;text-decoration:none;font-weight:700;font-size:.95rem}
+.tc.bar{min-width:14px;cursor:default}
+.tc.bar i{background:linear-gradient(var(--mute),var(--mute)) center/100% 1px no-repeat,linear-gradient(var(--mute),var(--mute)) center/1px 100% no-repeat}
+.tc.lab{cursor:default;color:var(--mute);min-width:28px}
+.tc.on{background:color-mix(in srgb,#ffc23d 28%,transparent)}
+.tc.sel{outline:2px solid var(--brass)}
+.tg{display:flex}.tg.gone{display:none}
+.faq{display:grid;gap:.4rem}.faq[hidden]{display:none}
+.faq details{border:1px solid var(--line);border-radius:10px;padding:.5rem .75rem;background:var(--panel)}
+.faq summary{cursor:pointer;font-weight:600;font-size:.9rem}
+.faq details[open] summary{margin-bottom:.4rem}
+.faq p{font-size:.875rem;line-height:1.6;color:var(--mute)}
+.tc.lab i{background:none;font-weight:700}
+main>*,#tab-stage>*{min-width:0}#tabv{max-width:100%}
+#hmTop{transform-box:view-box;transform-origin:70px 60px;transform:translate(0,-10px);transition:transform .22s cubic-bezier(.3,1.3,.5,1);--c:#ff7bb5}
+#hmTop .pm,#hmTop .th{fill:var(--c);transition:fill .2s}
+#hmTop .fg{fill:#a63d75;transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(.5);transition:transform .15s,fill .15s}
+#hmTop .fg.open{fill:var(--c);transform:scaleY(1)}
+#hmTop .fg.on{fill:#ffe3f0;transform:scaleY(1);filter:drop-shadow(0 0 4px #fff)}
+#hmTop.clap{transform:translate(0,0);animation:hmTap .16s ease-out}
+#hmTop.finger{transform:translate(0,-6px)}
+#hmTop.wave{--c:#6fb8ff;transform:translate(26px,-8px) rotate(18deg)}
+@keyframes hmTap{0%{transform:translate(0,-16px)}70%{transform:translate(0,2px)}100%{transform:translate(0,0)}}
+#hmDots span.cur{box-shadow:0 0 0 2px #ffc23d;transform:scale(1.3)}
+@keyframes hmPop{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){#hmTop{animation:none!important}}
+</style>
+</head>
+<body class="min-h-screen">
+<main class="max-w-[1500px] mx-auto p-4 md:p-8 grid gap-5">
+<header class="relative"><button id="theme" class="btn absolute right-0 top-0" aria-label="Switch between light and dark mode" title="Switch theme" style="padding:.6rem"></button>
+  <div class="flex items-center gap-3 pr-14"><span class="grid place-items-center w-12 h-12 rounded-2xl" style="background:var(--brass);color:var(--bg)"><i data-lucide="audio-lines"></i></span><h1 class="text-3xl md:text-4xl font-semibold">Carnatic Swara Player</h1><nav class="flex gap-1 p-1 card w-fit ml-auto" role="tablist"><button class="btn tab on" data-t="stage" role="tab"><i data-lucide="monitor-play"></i>Stage</button><button class="btn tab" data-t="studio" role="tab"><i data-lucide="pencil-line"></i>Studio</button><button class="btn tab" data-t="library" role="tab"><i data-lucide="library"></i>Library</button></nav></div>
+  
+</header>
+
+
+<div id="tab-stage" class="grid gap-3">
+
+<section class="card p-3">
+  <div class="relative"><canvas id="cv" class="w-full" style="height:clamp(420px,calc(100vh - 210px),1000px);display:block;border-radius:10px;cursor:pointer" aria-label="Note highway for the five-string Carnatic mandolin"></canvas><div id="hm" style="position:absolute;left:12px;bottom:12px;width:92px;pointer-events:none;color:#e6f6ff;font-size:11px;text-shadow:0 1px 4px #000"><div style="display:flex;justify-content:space-between;align-items:baseline"><b id="hmTala">Adi</b><span id="hmBeat">– / 8</span></div><svg viewBox="0 0 100 100" width="80" height="80" style="display:block;margin:2px auto 0" aria-hidden="true"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(150,215,235,.22)" stroke-width="7"/><circle id="hmRing" cx="50" cy="50" r="42" fill="none" stroke="#ff7bb5" stroke-width="7" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .25s ease,stroke .2s"/><text id="hmNum" x="50" y="50" text-anchor="middle" dominant-baseline="central" font-size="38" font-weight="700" fill="#e6f6ff" style="transition:fill .2s;transform-box:fill-box;transform-origin:center">–</text></svg><div id="hmLbl" style="display:none;text-align:center;font-weight:700">Ready</div><div id="hmDots" style="display:none;flex-wrap:wrap;gap:3px;justify-content:center;align-items:center;margin-top:4px"></div></div><div id="sbar" style="position:absolute;left:112px;right:12px;bottom:10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:6px 10px;border-radius:14px;background:rgba(5,16,26,.62);border:1px solid rgba(150,215,235,.22);backdrop-filter:blur(4px);color:#e6f6ff;font-size:12px"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px"><span style="display:flex;align-items:center;gap:6px">Note <span id="nowS" style="min-width:3rem;text-align:center;padding:.2rem .7rem;border-radius:999px;font-weight:700;border:1px solid rgba(150,215,235,.3)">–</span></span><label style="display:flex;align-items:center;gap:6px">Speed <select id="sKala" aria-label="Speed (kala)" style="background:rgba(255,255,255,.08);color:#e6f6ff;border:1px solid rgba(150,215,235,.3);border-radius:6px;padding:2px 4px"><option value="1" style="color:#000">1× Prathama</option><option value="2" style="color:#000">2× Dwitiya</option><option value="4" style="color:#000">4× Tritiya</option></select></label><span style="display:flex;align-items:center;gap:6px">BPM <button id="sBpmM" type="button" aria-label="Decrease BPM" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(150,215,235,.4);background:rgba(255,255,255,.08);color:#e6f6ff;font-size:16px;line-height:1;cursor:pointer;display:inline-grid;place-items:center;padding:0">−</button><b id="sBpmv" style="min-width:2.4rem;text-align:center;font-size:15px">90</b><button id="sBpmP" type="button" aria-label="Increase BPM" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(150,215,235,.4);background:rgba(255,255,255,.08);color:#e6f6ff;font-size:16px;line-height:1;cursor:pointer;display:inline-grid;place-items:center;padding:0">+</button></span><span style="display:flex;align-items:center;gap:6px"><i data-lucide="volume-2" style="width:16px;height:16px"></i><div id="vk" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70" title="Volume: drag up or down, or scroll" style="width:30px;height:30px;cursor:ns-resize;display:inline-block;touch-action:none;vertical-align:middle"><svg viewBox="0 0 40 40" width="30" height="30"><circle cx="20" cy="20" r="17" fill="rgba(255,255,255,.08)" stroke="rgba(150,215,235,.5)" stroke-width="2"/><circle cx="20" cy="20" r="11" fill="rgba(5,16,26,.55)" stroke="rgba(150,215,235,.35)"/><line id="vkn" x1="20" y1="20" x2="20" y2="10" stroke="#8fdcff" stroke-width="3" stroke-linecap="round"/></svg></div></span><button id="sPlay" class="btn pri text-sm" style="padding:.25rem .7rem"><i data-lucide="play"></i>Play</button><button id="pause" class="btn text-sm" style="padding:.25rem .7rem;color:#e6f6ff;border-color:rgba(150,215,235,.35)"><i data-lucide="pause"></i>Pause</button><button id="sStop" class="btn text-sm" style="padding:.25rem .7rem;color:#e6f6ff;border-color:rgba(150,215,235,.35)"><i data-lucide="square"></i>Stop</button><label style="display:flex;align-items:center;gap:6px">Sa <select id="key" aria-label="Key (Sa)" style="background:rgba(255,255,255,.08);color:#e6f6ff;border:1px solid rgba(150,215,235,.3);border-radius:6px;padding:2px 4px"><option style="color:#000">C</option><option style="color:#000">C#</option><option style="color:#000">D</option><option style="color:#000">D#</option><option style="color:#000">E</option><option style="color:#000">F</option><option style="color:#000">F#</option><option style="color:#000">G</option><option style="color:#000">G#</option><option style="color:#000">A</option><option style="color:#000">A#</option><option style="color:#000">B</option></select></label></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-left:auto"><span style="display:flex;align-items:center;gap:6px"><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="tp" checked> Tanpura</label><div id="tpk" role="slider" tabindex="0" aria-label="Tanpura volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70" title="Tanpura volume: drag up or down, or scroll" style="width:30px;height:30px;cursor:ns-resize;display:inline-block;touch-action:none;vertical-align:middle"><svg viewBox="0 0 40 40" width="30" height="30"><circle cx="20" cy="20" r="17" fill="rgba(255,255,255,.08)" stroke="rgba(150,215,235,.5)" stroke-width="2"/><circle cx="20" cy="20" r="11" fill="rgba(5,16,26,.55)" stroke="rgba(150,215,235,.35)"/><line id="tpn" x1="20" y1="20" x2="20" y2="10" stroke="#8fdcff" stroke-width="3" stroke-linecap="round"/></svg></div><select id="tpt" aria-label="Tanpura tuning" style="background:rgba(255,255,255,.08);color:#e6f6ff;border:1px solid rgba(150,215,235,.3);border-radius:6px;padding:2px 4px"><option value="pa" style="color:#000">Pa-Sa-Sa-Sa</option><option value="ma" style="color:#000">Ma-Sa-Sa-Sa</option><option value="dha" style="color:#000">Dha-Sa-Sa-Sa</option><option value="ni" style="color:#000">Ni-Sa-Sa-Sa</option></select></span></div></div></div>
+<div class="flex flex-wrap items-center gap-3 mt-2">
+  <div id="legend" class="flex flex-wrap"></div>
+  <span id="status" class="text-sm ml-auto" style="color:var(--mute)">Ready</span>
+</div>
+<span id="now" hidden>–</span>
+</section>
+
+<section class="card p-3"><div class="flex flex-wrap items-center gap-2 mb-2"><h2 class="text-lg font-semibold mr-2">Tablature</h2><button class="btn text-sm" data-tc="h">Hammer-on (h)</button><button class="btn text-sm" data-tc="p">Pull-off (p)</button><button class="btn text-sm" data-tc="/">Slide up /</button><button class="btn text-sm" data-tc="\">Slide down \</button><button class="btn text-sm" data-tc="~">Shake ~</button><button class="btn text-sm" data-tc="*"><i data-lucide="audio-waveform"></i>Gamaka (oscillator)</button><button class="btn text-sm" data-tc="">Clear</button><button class="btn text-sm" data-st="-1">String −</button><button class="btn text-sm" data-st="1">String +</button><button class="btn text-sm" data-st="0">Auto string</button></div><div id="tabv" class="overflow-x-auto relative"></div></section>
+</div><div id="tab-studio" class="hidden"><div class="grid gap-5">
+
+<section class="grid gap-3 content-start">
+  <div class="card p-4">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-xl font-semibold">Notation</h2>
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="text-sm flex items-center gap-1">Rāga <select id="raga" class="in" aria-label="Rāga (type its name to jump to it)" style="width:auto;max-width:16rem;padding:.25rem .4rem"></select></label>
+        <label class="text-sm flex items-center gap-1">Beats <input id="bcount" type="number" min="1" max="32" value="8" class="in" style="width:4.5rem;padding:.25rem .4rem"></label>
+        <button id="imp" class="btn text-sm"><i data-lucide="file-up"></i>Import file</button>
+        <input id="file" type="file" accept=".txt,.json,.csv" hidden>
+      </div>
+    </div>
+    <div id="gridBox" class="overflow-x-auto mb-2"></div>
+    <textarea id="nt" rows="14" class="in font-mono text-base" spellcheck="false" aria-label="Notation"></textarea>
+        <ul id="warn" class="text-sm mt-2 grid gap-1" style="color:var(--red)"></ul>
+  </div>
+  <details class="card p-4 hidden"><summary class="cursor-pointer font-semibold">The 16 swarasthānas</summary><div id="sw16" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-sm"></div></details>
+</section>
+<section class="card p-4 grid gap-3 content-start">
+  <div class="grid gap-2"><div class="flex flex-wrap items-end gap-2"><div class="flex-1 min-w-[12rem]" style="max-width:28rem"><label class="lb" for="tal">Tāla</label><select id="tal" class="in"></select></div></div><div id="talBeats" class="flex flex-wrap gap-1"></div><div id="talInfo" class="text-sm font-semibold"></div></div>
+  <div id="helpPanel" class="faq" hidden>
+    <details name="faq"><summary>Which letters do I write for the swaras?</summary><p><code>S R G M P D N</code> are the swaras. Variants are <code>R1 R2 R3</code>, <code>G1 G2 G3</code>, <code>M1 M2</code>, <code>D1 D2 D3</code> and <code>N1 N2 N3</code>.</p></details>
+    <details name="faq"><summary>How do I write the lower and upper octaves?</summary><p>Write a lower-octave note as <code>s</code> or <code>S.</code> (shown as Ṣ), and an upper-octave note as <code>S'</code> (shown as Ṡ). Ṣ and Ṡ are the two octaves. A lower Pa after a note is written <code>P.</code>.</p></details>
+    <details name="faq"><summary>How do I hold a note, add a rest or mark a tāla bar?</summary><p>A comma (<code>,</code>) holds a note for one beat and a semicolon (<code>;</code>) for two. A hyphen (<code>-</code>) is a rest, and a bar (<code>|</code>) marks a tāla bar.</p></details>
+    <details name="faq"><summary>How do I put several notes in one beat?</summary><p>Notes written together, such as <code>SRG</code>, share one beat.</p></details>
+    <details name="faq"><summary>Can I change the tempo while it plays?</summary><p>Yes. Tempo changes apply straight away.</p></details>
+    <details name="faq"><summary>How do I choose a string for a note?</summary><p>Write <code>@</code> and a string number. <code>S@2</code> plays that one note on string 2, <code>@3</code> sets string 3 for the notes after it, and <code>@0</code> returns to the default string.</p></details>
+    <details name="faq"><summary>How do I add hammer-ons, slides and other ornaments?</summary><p>Ornaments go just before a note: <code>h</code> for hammer-on, <code>p</code> for pull-off, <code>/</code> for slide up, <code>\</code> for slide down, <code>~</code> for shake and <code>*</code> for gamaka. For example, <code>GhP</code> is a hammer-on from G to P.</p></details>
+    <details name="faq"><summary>How do I add lyrics?</summary><p>Start a line with <code>[SWARA1]</code> followed by its notation, then put <code>[SAHITYA1]</code> and the words on the next line. The words show on the stage above the falling notes while that line plays, and the markers are not counted as notes.</p></details>
+    <details name="faq"><summary>Is there a quick way to type the special symbols?</summary><p>Click a symbol to insert it into the notation at the cursor.</p><div id="ins" class="flex flex-wrap mt-2"></div></details>
+  </div>
+  <div class="flex justify-end"><button id="helpBtn" type="button" class="btn text-sm" aria-expanded="false" aria-controls="helpPanel"><i data-lucide="circle-help"></i>Help</button></div>
+  <div style="display:none" aria-hidden="true">
+    <div class="grid grid-cols-2 gap-3">
+    <input id="tonic" type="hidden" value="C#3">
+    <div><label class="lb" for="tune" hidden></label><input id="tune" type="hidden" value="ji"></div>
+  </div>
+  <div><label class="lb" for="bpm">Tempo: <b id="bpmv">90</b> BPM</label><input id="bpm" type="range" min="30" max="240" value="90" class="w-full"></div>
+  <div class="grid grid-cols-2 gap-3">
+    <div><label class="lb" for="kala">Kāla</label><select id="kala" class="in"><option value="1">Prathama (1×)</option><option value="2">Dwitiya (2×)</option><option value="4">Tritiya (4×)</option></select></div>
+    <div><label class="lb" for="gati">Gati / Nadai</label><select id="gati" class="in"><option value="4">Chatusra</option><option value="3">Tisra</option><option value="5">Khanda</option><option value="7">Misra</option><option value="9">Sankirna</option></select></div>
+  </div>
+  
+  <div id="info" class="text-sm grid gap-1 pt-2" style="border-top:1px solid var(--line)"></div>
+</div>
+</section>
+</div>
+</div>
+<div id="tab-library" class="hidden grid gap-4">
+<section class="card p-4 grid gap-3"><div class="flex flex-wrap items-end gap-2"><div class="flex-1 min-w-[14rem]"><label class="lb" for="libName">Name this notation</label><input id="libName" class="in" placeholder="e.g. Varnam in Shankarabharanam" autocomplete="off"></div><button id="libSave" class="btn pri"><i data-lucide="save"></i>Save current notation</button></div><p class="text-sm" style="color:var(--mute)">Saves the notation from the Studio tab with its rāga, Sa, tempo, kāla and gati. Saved notations stay in this browser.</p></section>
+<p id="libMsg" class="text-sm" style="color:var(--mute)"></p>
+<section id="libEditBox"></section>
+<section id="libList" class="grid gap-3"></section>
+</div></main>
+
+<script>
+"use strict";
+/* ---------- Theory ---------- */
+const MELA="Kanakangi,Ratnangi,Ganamurti,Vanaspati,Manavati,Tanarupi,Senavati,Hanumatodi,Dhenuka,Natakapriya,Kokilapriya,Rupavati,Gayakapriya,Vakulabharanam,Mayamalavagowla,Chakravakam,Suryakantam,Hatakambari,Jhankaradhvani,Natabhairavi,Keeravani,Kharaharapriya,Gaurimanohari,Varunapriya,Mararanjani,Charukesi,Sarasangi,Harikambhoji,Dheerasankarabharanam,Naganandini,Yagapriya,Ragavardhini,Gangeyabhushani,Vagadheeswari,Shulini,Chalanata,Salagam,Jalarnavam,Jhalavarali,Navaneetam,Pavani,Raghupriya,Gavambodhi,Bhavapriya,Subhapantuvarali,Shadvidamargini,Suvarnangi,Divyamani,Dhavalambari,Namanarayani,Kamavardhini,Ramapriya,Gamanashrama,Viswambhari,Shamalangi,Shanmukhapriya,Simhendramadhyamam,Hemavati,Dharmavati,Neetimati,Kantamani,Rishabhapriya,Latangi,Vachaspati,Mechakalyani,Chitrambari,Sucharitra,Jyotisvarupini,Dhatuvardhini,Nasikabhushani,Kosalam,Rasikapriya".split(",");
+const RG=[[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]], DN=[[8,9],[8,10],[8,11],[9,10],[9,11],[10,11]];
+const SW={S:0,R1:1,R2:2,R3:3,G1:2,G2:3,G3:4,M1:5,M2:6,P:7,D1:8,D2:9,D3:10,N1:9,N2:10,N3:11};
+const JI=[1,16/15,9/8,6/5,5/4,4/3,45/32,3/2,8/5,5/3,9/5,15/8];
+const SEMI_LABEL=["S","R1","R2/G1","R3/G2","G3","M1","M2","P","D1","D2/N1","D3/N2","N3"];
+const melaMap=n=>{const c=Math.floor((n-1)/6),p=(n-1)%6,[r,g]=RG[c%6],[d,nn]=DN[p];return{S:0,R:r,G:g,M:n<=36?5:6,P:7,D:d,N:nn}};
+/* Janya definitions: parent Melakarta number, arohana, avarohana. Editable. */
+const JANYA=[
+["Mohanam",28,"S R2 G3 P D2 S'","S' D2 P G3 R2 S"],
+["Hamsadhwani",29,"S R2 G3 P N3 S'","S' N3 P G3 R2 S"],
+["Madhyamavati",22,"S R2 M1 P N2 S'","S' N2 P M1 R2 S"],
+["Abhogi",22,"S R2 G2 M1 D2 S'","S' D2 M1 G2 R2 S"],
+["Bilahari",29,"S R2 G3 P D2 S'","S' N3 D2 P M1 G3 R2 S"],
+["Ritigowla (vakra)",22,"S G2 R2 G2 M1 N2 S'","S' N2 M1 G2 M1 G2 R2 S"],
+["Kambhoji (bhashanga)",28,"S R2 G3 M1 P D2 N3 D2 S'","S' N2 D2 P M1 G3 R2 S"]];
+JANYA.push(...`Revati:2:SR1M1PN2S':S'N2PM1R1S
+Dhanyasi:8:SG2M1PN2S':S'N2D1PM1G2R1S
+Bhoopalam:8:SR1G2PD1S':S'D1PG2R1S
+Shuddha Seemantini:8:SR1G2M1PD1S':S'D1PM1G2R1S
+Udayaravichandrika:9:SG2M1PN3S':S'N3PM1G2S
+Bowli:15:SR1G3PD1S':S'N3D1PG3R1S
+Malahari:15:SR1M1PD1S':S'D1PM1G3R1S
+Saveri:15:SR1M1PD1S':S'N3D1PM1G3R1S
+Gowla:15:SR1M1PN3S':S'N3PM1R1G3M1R1S
+Lalita:15:SR1G3M1D1N3S':S'N3D1M1G3R1S
+Revagupti:15:SR1G3PD1S':S'D1PG3R1S
+Nadanamakriya:15:SR1G3M1PD1N3:N3D1PM1G3R1S
+Valaji:16:SG3PD2N2S':S'N2D2PG3S
+Anandabhairavi:20:SG2R2G2M1PD2PS':S'N2D2PM1G2R2S
+Bhairavi:20:SG2R2G2M1PD2N2S':S'N2D1PM1G2R2S
+Hindolam:20:SG2M1D1N2S':S'N2D1M1G2S
+Jaunpuri:20:SR2M1PD1N2S':S'N2D1PM1G2R2S
+Devakriya:20:SR2M1PN2S':S'N2D1N2PM1G2R2S
+Chandrakauns:21:SG2M1D1N3S':S'N3D1M1G2S
+Shuddha Dhanyasi:22:SG2M1PN2S':S'N2PM1G2S
+Manohari:22:SG2R2G2M1PD2S':S'D2PM1G2R2S
+Shivaranjani:22:SR2G2PD2S':S'D2PG2R2S
+Abheri:22:SG2M1PN2S':S'N2D2PM1G2R2S
+Sriranjani:22:SR2G2M1D2N2S':S'N2D2M1G2R2S
+Brindavana Saranga:22:SR2M1PN3S':S'N2PM1R2G2R2S
+Kapi:22:SR2M1PN3S':S'N2D2N2PM1G2R2S
+Kamala Manohari:27:SG3M1PN3S':S'N3D1PM1G3S
+Khamas:28:SM1G3M1PD2N2S':S'N2D2PM1G3R2S
+Desh:28:SR2M1PN3S':S'N2D2PM1G3R2S
+Bahudari:28:SG3M1PD2N2S':S'N2PM1G3S
+Yadukula Kambhoji:28:SR2M1PD2S':S'N2D2PM1G3R2S
+Narayanagowla:28:SR2M1PN2D2N2S':S'N2D2PM1G3R2G3S
+Surutti:28:SR2M1PN2D2N2S':S'N2D2PM1G3PM1R2S
+Kedaragowla:28:SR2M1PN2S':S'N2D2PM1G3R2S
+Karnataka Behag:28:SR2G3M1PD2N2S':S'N2D2N2PD2M1G3R2S
+Arabhi:29:SR2M1PD2S':S'N3D2PM1G3R2S
+Atana:29:SR2M1PN2S':S'N2D2PM1G2M1R2S
+Begada:29:SG3R2G3M1PD2PS':S'N3D2PM1G3R2S
+Kedaram:29:SM1G3M1PN3S':S'N3PM1G3R2S
+Devagandhari:29:SR2M1PD2S':S'N3D2PM1G3R2S
+Suddha Saveri:29:SR2M1PD2S':S'D2PM1R2S
+Multani:45:SG2M2PN3S':S'N3D1PM2G2R1S
+Poorvikalyani:53:SR1G3M2PD2PS':S'N3D2PM2G3R1S
+Sohini:53:SG3M2D2N3S':S'N3D2M2G3R1S
+Madhuvanti:59:SG2M2PN3S':S'N3D2PM2G2R2S
+Bhoopali:65:SR2G3PD2S':S'D2PG3R2S
+Hindol:65:SG3M2D2N3S':S'N3D2M2G3S
+Yamuna Kalyani:65:SR2G3M2PD2N3S':S'N3D2PM2G3M1G3R2S
+Amritavarshini:66:SG3M2PN3S':S'N3PM2G3S
+Hamsanadam:60:SR2M2PD3N3S':S'N3D3PM2R2S
+Kathanakuthuhalam:29:SR2M1D2N3G3PS':S'N3D2PM1G3R2S
+Nattai:36:SR3G3M1PN3S':S'N3PM1G3R3S
+Gambheeranattai:36:SG3M1PN3S':S'N3PM1G3S
+Sahana:28:SR2G3M1PM1D2N2S':S'N2S'D2N2D2PM1G3M1R2G3R2S
+Shree:22:SR2M1PN2S':S'N2PD2N2PM1R2G2R2S
+Bageshri:22:SG2M1D2N2S':S'N2D2M1PD2G2M1R2S
+Mukhari:22:SR2M1PN2D2S':S'N2D1PM1G2R2S
+Kanada:22:SR2PG2M1D2N2S':S'N2PM1G2M1R2S
+Neelambari:29:SR2G3M1PD2PN3S':S'N3PM1G3R2G3S
+Janaranjani:29:SR2G3M1PD2PN3S':S'D2PM1R2S
+Vasantabhairavi:14:SR1G3M1D1N2S':S'N2D1M1PM1G3R1S
+Bhairavam:17:SR1G3M1PD2N3S':S'D2PM1G3R1S
+Kalyanavasantham:21:SG2M1D1N3S':S'N3D1PM1G2R2S
+Devamanohari:22:SR2M1PD2N2S':S'N2D2N2PM1R2S
+Hamsanandi:53:SR1G3M2D2N3S':S'N3D2M2G3R1S
+Kuntalavarali:28:SM1PD2N2D2S':S'N2D2PM1S
+Vasantha:17:SM1G3M1D2N3S':S'N3D2M1G3R2S
+Hamsakalyani:65:SR2G3PN3S':S'N3D2PM2G3R2S`.split("\n").map(l=>{const a=l.split(":");return[a[0],+a[1],a[2],a[3]]}));
+const COL={S:"#e5a823",R:"#ef5b3b",G:"#e0509f",M:"#9a68f2",P:"#3d86f5",D:"#16b8a6",N:"#8cc63f"};
+const SWN={S:"Shadjam",R1:"Shuddha Rishabham",R2:"Chatusruti Rishabham",R3:"Shatsruti Rishabham",G1:"Shuddha Gandharam",G2:"Sadharana Gandharam",G3:"Antara Gandharam",M1:"Shuddha Madhyamam",M2:"Prati Madhyamam",P:"Panchamam",D1:"Shuddha Dhaivatham",D2:"Chatusruti Dhaivatham",D3:"Shatsruti Dhaivatham",N1:"Shuddha Nishadham",N2:"Kaisiki Nishadham",N3:"Kakali Nishadham"};
+const mod=x=>((x%12)+12)%12;
+function seq(str,map){return str.match(/[SRGMPDN][123]?'?/g).map(t=>{const m=t.match(/^([SRGMPDN])([123])?(')?$/);const l=m[1];const s=m[2]&&l!=="S"&&l!=="P"?SW[l+m[2]]:map[l];return{l,lab:m[2]?l+m[2]:l,semi:s+(m[3]?12:0),anya:!!m[2]&&s!==map[l]}})}
+function buildRaga(v){
+  const [k,i]=v.split(":");let name,n,aro,ava;
+  if(k==="m"){n=+i;name=MELA[n-1];const m=melaMap(n),o="S R G M P D N S'".split(" ");
+    aro=o.map(t=>({semi:m[t[0]]+(t[1]?12:0),lab:"SP".includes(t[0])?t[0]:t[0]+(m[t[0]]-{R:0,G:1,M:4,D:7,N:8}[t[0]])}));ava=aro.slice().reverse()}
+  else{const j=JANYA[i];n=j[1];name=j[0];const m=melaMap(n);aro=seq(j[2],m);ava=seq(j[3],m)}
+  const m=melaMap(n),all=[...aro,...ava];
+  const aroSet=new Set(aro.map(x=>mod(x.semi))),avaSet=new Set(ava.map(x=>mod(x.semi)));
+  const edges=(a,b)=>new Set(a.slice(1).map((x,q)=>mod(a[q].semi)+">"+mod(x.semi)));
+  const up=aro.every((x,q)=>!q||x.semi>aro[q-1].semi),dn=ava.every((x,q)=>!q||x.semi<ava[q-1].semi);
+  const present=new Set(all.map(x=>x.l)),letters="SRGMPDN".split("");
+  return{name,n,m,aro,ava,aroSet,avaSet,vakra:!(up&&dn),upE:edges(aro),dnE:edges(ava),
+    varja:letters.filter(l=>!present.has(l)&&k==="j"),anya:[...new Set(all.filter(x=>x.anya).map(x=>x.lab))],
+    scale:[...new Set([...aroSet,...avaSet])].sort((a,b)=>a-b)}
+}
+/* ---------- Pitch ---------- */
+function parseTonic(s){s=s.trim();let m=s.match(/^([A-Ga-g])([#b]?)(-?\d)$/);
+  if(m){const b={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1].toUpperCase()]+(m[2]==="#"?1:m[2]==="b"?-1:0);return 440*2**((b+12*(+m[3]+1)-69)/12)}
+  const f=parseFloat(s);return f>20&&f<2000?f:null}
+const $=id=>document.getElementById(id);
+const freqOf=(semi,sa)=>{const c=mod(semi),o=Math.floor(semi/12);return $("tune").value==="ji"?sa*JI[c]*2**o:sa*2**(semi/12)};
+/* ---------- Parser ---------- */
+/* [SWARA] and [SAHITYA] lines: markers and lyrics are blanked out (same length) before parsing so they never become notes or beat cells */
+var MK=/\[\s*(SWARA|SAHITYA)\s*\d*\s*\]/gi;
+function hasMarkers(){return /\[\s*(SWARA|SAHITYA)\s*\d*\s*\]/i.test($("nt").value)}
+function maskLyrics(t){const ms=[...t.matchAll(MK)];if(!ms.length)return t;const sp=s=>s.replace(/[^\n]/g," ");let o="",last=0,mode="s";
+  ms.forEach(m=>{const seg=t.slice(last,m.index);o+=mode==="s"?seg:sp(seg);o+=sp(m[0]);last=m.index+m[0].length;mode=m[1].toUpperCase()==="SWARA"?"s":"y"});
+  const tail=t.slice(last);return o+(mode==="s"?tail:sp(tail))}
+function getLines(t){t=t.normalize("NFD");const ms=[...t.matchAll(MK)];if(!ms.length)return[{s:0,e:t.length,lyric:""}];
+  const L=[];let last=0,mode="s";
+  const end=p=>{const seg=t.slice(last,p);if(mode==="s"){if(seg.trim())L.push({s:last,e:p,lyric:""})}else if(L.length)L[L.length-1].lyric=seg.trim().replace(/\s+/g," ")};
+  ms.forEach(m=>{end(m.index);last=m.index+m[0].length;mode=m[1].toUpperCase()==="SWARA"?"s":"y"});end(t.length);return L}
+function parseNotation(text,raga,strict){
+  const ev=[],warn=[],sv="auto",dflt=null;let beat=0,last=null,prev=null,dir=1,pt=null,fs=dflt,kk=0;text=maskLyrics(text.normalize("NFD")).replace(/(?<=[SRGMPDNsrgmpdn0-9.'^\u0323\u0307])p(?=[SRGMPDNsrgmpdn])/g,"%").replace(/h/g,"&");
+  const tokens=[...text.matchAll(/\|+|[^\s|]+/g)];
+  const addNote=(semi,lab,units)=>ev.push({t:"n",semi,lab,u:units,beat});
+  for(const tm of tokens){const tok=tm[0];
+    if(/^\|+$/.test(tok)){ev.push({t:"bar",u:0,pos:tm.index});continue}
+    if(/^[,;]+$/.test(tok)){const x=[...tok].reduce((a,c)=>a+(c===";"?2:1),0);
+      if(last){last.u+=x}else ev.push({t:"r",u:x});beat+=1;continue}
+    const sl=[];const re=/([SRGMPDNsrgmpdn])([123])?([.'^\u0323\u0307]*)(@[1-5])?|(,)|(;)|(-)|(&|%|\/|\\|~|\*)|@([0-5])|(\S)/g;let m;
+    while((m=re.exec(tok))){
+      if(m[1]){const L=m[1].toUpperCase();let semi=m[2]&&L!=="S"&&L!=="P"?SW[L+m[2]]:raga.m[L];
+        const lab=m[2]&&L!=="S"&&L!=="P"?L+m[2]:L,oct=(m[1]!==L?-1:0)+[...m[3]].reduce((a,c)=>a+(c==="."||c==="\u0323"?-1:1),0);
+        sl.push({k:"n",semi:semi+12*oct,lab:L+(oct>0?"\u0307":oct<0?"\u0323":"")+lab.slice(1),w:1,pos:tm.index+m.index,len:m[0].length,fs:m[4]?+m[4][1]-1:fs,tech:pt});pt=null}
+      else if(m[5])sl.push({k:"c",w:1});else if(m[6])sl.push({k:"c",w:2});else if(m[7])sl.push({k:"r",w:1});else if(m[8])pt={"&":"h","%":"p","/":"s","\\":"d","~":"o","*":"g"}[m[8]];else if(m[9]!==undefined)fs=m[9]==="0"?dflt:+m[9]-1;
+      else warn.push(`Beat ${beat+1}: unknown symbol “${m[10]}”`)}
+    const tot=sl.reduce((a,s)=>a+s.w,0)||1;let cur=null;
+    for(const s of sl){const u=s.w/tot;
+      if(s.k==="c"){if(cur)cur.u+=u;else if(last)last.u+=u;else ev.push({t:"r",u});continue}
+      if(s.k==="r"){ev.push(cur=last={t:"r",u});cur=null;last=null;continue}
+      /* direction check */
+      let ok=true,msg="";const c=mod(s.semi);
+      if(prev!==null){const d=Math.sign(s.semi-prev)||dir;
+        if(s.semi!==prev){dir=d}
+        const set=s.semi===prev?null:(d>0?raga.aroSet:raga.avaSet),nm=d>0?"ārohaṇa":"avarohaṇa";
+        if(set&&!set.has(c)){ok=false;msg=`${s.lab} is not in the ${nm} of ${raga.name}`}
+        else if(set&&raga.vakra){const sc=raga.scale,a=sc.indexOf(mod(prev)),b=sc.indexOf(c);
+          const E=d>0?raga.upE:raga.dnE;
+          if(a>=0&&b>=0&&Math.abs(a-b)===1&&!E.has(mod(prev)+">"+c)){ok=false;msg=`${SEMI_LABEL[mod(prev)]}→${s.lab} breaks the vakra path of ${raga.name}`}}}
+      else if(!raga.aroSet.has(c)&&!raga.avaSet.has(c)){ok=false;msg=`${s.lab} is not in ${raga.name}`}
+      if(!ok)warn.push(`Beat ${beat+1}: ${msg}${strict?" (skipped)":""}`);
+      if(!ok&&strict){ev.push(cur=last={t:"r",u});cur=last;continue}
+      prev=s.semi;let sf=s.fs;if(sf!=null&&(s.semi-STR[sf]<0||s.semi-STR[sf]>WIN)){warn.push(`Beat ${beat+1}: ${s.lab} can’t be played on string ${sf+1}; using auto`);sf=null}ev.push(cur=last={t:"n",semi:s.semi,lab:s.lab,u,beat:beat+1,k:kk++,pos:s.pos,len:s.len,tech:s.tech,str:sf});}
+    beat++;
+  }
+  return{ev,warn}
+}
+/* ---------- Audio ---------- */
+let ctx,master,filt,queue=[],warnList=[],idx=0,nextT=0,times=[],state="stopped",timer=null,raga;
+function initAudio(){if(ctx)return;ctx=new (window.AudioContext||window.webkitAudioContext)();
+  filt=ctx.createBiquadFilter();filt.type="lowpass";filt.frequency.value=9000;
+  const comp=ctx.createDynamicsCompressor();master=ctx.createGain();master.gain.value=volLvl;
+  filt.connect(comp);comp.connect(master);master.connect(ctx.destination)}
+const KS=new Map();
+function ksBuf(N){let b=KS.get(N);if(b)return b;const sr=ctx.sampleRate,len=Math.floor(sr*2.8);b=ctx.createBuffer(1,len,sr);const d=b.getChannelData(0),r=new Float32Array(N);let lp=0;
+  for(let i=0;i<N;i++){lp+=.45*((Math.random()*2-1)-lp);r[i]=lp}
+  let ix=0,mx=0;for(let i=0;i<len;i++){const nx=(ix+1)%N,v=(r[ix]+r[nx])*.5*.9997;d[i]=r[ix];r[ix]=v;ix=nx;mx=Math.max(mx,Math.abs(d[i]))}
+  for(let i=0;i<len;i++)d[i]/=mx||1;KS.set(N,b);return b}
+/* Saraswati veena: Karplus-Strong plucked string through a warm gourd resonance, with pitch automation for slides, shakes and gamakas */
+function veena(f,t,d,op){
+  const sr=ctx.sampleRate,N=Math.max(2,Math.round(sr/f)),e=t+Math.max(d,.1),tg=op&&op.tech,soft=tg==="h"||tg==="p";
+  const s=ctx.createBufferSource(),g=ctx.createGain(),body=ctx.createBiquadFilter(),base=f/(sr/N),pr=s.playbackRate;
+  s.buffer=ksBuf(N);body.type="peaking";body.frequency.value=190;body.gain.value=6;body.Q.value=1.1;
+  if(tg==="s"||tg==="d"){pr.setValueAtTime(base*op.from/f,t);pr.exponentialRampToValueAtTime(base,t+.1)}
+  else if(tg==="o"){for(let k=0;k<8;k++)pr.setValueAtTime(k%2?base:base*op.from/f,t+k*.07)}
+  else if(tg==="g"){pr.setValueAtTime(base*.982,t);pr.exponentialRampToValueAtTime(base,t+.12);const lf=ctx.createOscillator(),lg=ctx.createGain();lf.frequency.value=5.5;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(base*.016,t+.4);lf.connect(lg);lg.connect(pr);lf.start(t);lf.stop(e+.6)}
+  else pr.value=base;
+  g.gain.setValueAtTime((soft?.55:1)*.6,t);g.gain.setTargetAtTime(0,e,.14);
+  s.connect(body);body.connect(g);g.connect(filt);s.start(t,soft?.01:0);s.stop(e+1.2)}
+function veenaOld(f,t,d,op){
+  const A=.004,R=.2,e=t+Math.max(d,.08);
+  const g=ctx.createGain(),lp=ctx.createBiquadFilter(),w=ctx.createPeriodicWave(new Float32Array(10),new Float32Array([0,1,.6,.38,.24,.15,.1,.06,.04,.025]));
+  lp.type="lowpass";lp.Q.value=.7;lp.frequency.setValueAtTime(Math.min(f*9,7000),t);lp.frequency.setTargetAtTime(Math.min(f*3.5,3000),t,.25);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.55*(op&&op.tech!=="s"?.5:1),t+A);g.gain.setTargetAtTime(.16,t+A,.28);g.gain.setTargetAtTime(.04,t+.9,1.2);
+  g.gain.cancelScheduledValues(e);g.gain.setTargetAtTime(0,e,R/3);
+  [[f,.6],[f*1.0023,.4]].forEach(([fr,a])=>{const o=ctx.createOscillator(),m=ctx.createGain();o.setPeriodicWave(w);if(op&&op.tech==="s"){o.frequency.setValueAtTime(op.from*fr/f,t);o.frequency.exponentialRampToValueAtTime(fr,t+.09)}else o.frequency.value=fr;m.gain.value=a;o.connect(m);m.connect(g);o.start(t);o.stop(e+R*2.5)});
+  g.connect(lp);lp.connect(filt)}
+let lastV=null,fxCtx=null;
+function fxInit(){
+  if(fxCtx===ctx)return;
+  fxCtx=ctx;
+  const sr=ctx.sampleRate,len=Math.floor(sr*2.4),b=ctx.createBuffer(2,len,sr);
+  for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<len;i++){const fade=i<sr*.01?i/(sr*.01):1;d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4)*fade}}
+  const rv=ctx.createConvolver(),rg=ctx.createGain();rv.buffer=b;rg.gain.value=.2;
+  filt.connect(rv);rv.connect(rg);rg.connect(master);
+}
+/* Electric mandolin: saw + triangle through a resonant low-pass with a fast pluck envelope. Meend (slides), kampita (LFO vibrato), shake, and legato hammer-ons and pull-offs that keep the previous string ringing. */
+function mando(f,t,d,op){
+  fxInit();
+  const tg=op&&op.tech,from=op&&op.from,e=t+Math.max(d,.12),soft=tg==="h"||tg==="p";
+  if(lastV&&lastV.ctx===ctx&&lastV.end>=t-.02&&(soft||tg==="s"||tg==="d")){
+    const gl=(tg==="s"||tg==="d")?Math.min(.14,Math.max(.03,d*.5)):.035,lv=lastV;
+    lv.o1.frequency.cancelScheduledValues(t);lv.o1.frequency.setValueAtTime(lv.f,t);lv.o1.frequency.exponentialRampToValueAtTime(f,t+gl);
+    lv.o2.frequency.cancelScheduledValues(t);lv.o2.frequency.setValueAtTime(lv.f*1.0018,t);lv.o2.frequency.exponentialRampToValueAtTime(f*1.0018,t+gl);
+    lv.g.gain.cancelScheduledValues(t);lv.g.gain.setTargetAtTime(.5,t,.01);lv.g.gain.setTargetAtTime(0,e,.45);
+    lv.f=f;lv.end=e;return;
+  }
+  const o1=ctx.createOscillator(),o2=ctx.createOscillator(),m1=ctx.createGain(),m2=ctx.createGain(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
+  const sl=(tg==="s"||tg==="d")&&from>0,start=sl?from:f;
+  o1.type="sawtooth";o2.type="triangle";
+  o1.frequency.setValueAtTime(start,t);o2.frequency.setValueAtTime(start*1.0018,t);
+  const gs=Math.min(.14,Math.max(.03,d*.5));if(sl){o1.frequency.exponentialRampToValueAtTime(f,t+gs);o2.frequency.exponentialRampToValueAtTime(f*1.0018,t+gs)}
+  m1.gain.value=.26;m2.gain.value=.2;
+  o1.connect(m1);o2.connect(m2);m1.connect(lp);m2.connect(lp);
+  lp.type="lowpass";lp.Q.value=1.3;
+  lp.frequency.setValueAtTime(Math.min(f*14,11000),t);lp.frequency.setTargetAtTime(Math.min(f*6,7500),t+.01,.2);
+  const peak=soft?.4:.55;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+.005);g.gain.setTargetAtTime(.4,t+.005,.5);g.gain.setTargetAtTime(0,e,.45);
+  lp.connect(g);g.connect(filt);
+  if(tg==="g"||tg==="o"){
+    const lf=ctx.createOscillator(),lg=ctx.createGain(),isG=tg==="g";
+    lf.frequency.value=isG?5.5:8;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(isG?f*.016:f*.025,t+Math.min(isG?.3:.05,d*.4));
+    lf.connect(lg);lg.connect(o1.frequency);lg.connect(o2.frequency);lf.start(t);lf.stop(e+1.2);
+  }
+  o1.start(t);o2.start(t);o1.stop(e+1.2);o2.stop(e+1.2);
+  lastV={ctx,o1,o2,g,f,end:e};
+}
+function voice(f,t,d,op){
+  return mando(f,t,d,op);
+  const tb=.35,A=.012,D=.2,S=.55,R=.14,e=t+Math.max(d,.06);
+  const g=ctx.createGain(),o1=ctx.createOscillator(),o2=ctx.createOscillator(),m1=ctx.createGain(),m2=ctx.createGain();
+  o1.type="sine";o2.type="triangle";o1.frequency.value=o2.frequency.value=f;m1.gain.value=1-tb;m2.gain.value=tb;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.45,t+A);g.gain.setTargetAtTime(.45*S,t+A,D/3);
+  g.gain.cancelScheduledValues(e);g.gain.setTargetAtTime(0,e,R/3);
+  o1.connect(m1);o2.connect(m2);m1.connect(g);m2.connect(g);g.connect(filt);
+  [o1,o2].forEach(o=>{o.start(t);o.stop(e+R*2.5)})}
+const unitSec=()=>60/$("bpm").value*(4/$("gati").value)/$("kala").value;
+function sa(){return parseTonic($("tonic").value)}
+function tick(){
+  const f=sa();if(!f)return;
+  while((idx<queue.length||sel)&&nextT<ctx.currentTime+.15){
+    if(sel&&idx>=sel.e){idx=sel.s}
+    const e=queue[idx],d=e.u*unitSec();times[idx]=[nextT,d];
+    if(e.t==="n"){const fq=freqOf(e.semi,f);voice(fq,nextT,d*.98,e.tech&&(pf||e.tech==="g")?{tech:e.tech,from:pf}:null);pf=fq}
+    nextT+=d;idx++}
+  if(!sel&&idx>=queue.length&&ctx.currentTime>nextT){cheer();clearInterval(timer);setTimeout(stop,2200)}
+}
+function play(){initAudio();ctx.resume();if($("tp").checked&&!dr)droneOn();
+  if(state==="playing")return;
+  if(state==="stopped"){if(!sa()){setStatus("Enter a valid Sa");return}load();idx=sel?sel.s:0;times=[];nextT=ctx.currentTime+.1}
+  state="playing";clearInterval(timer);timer=setInterval(tick,25);setStatus("Playing");draw()}
+function pause(){if(state!=="playing")return;state="paused";ctx.suspend();clearInterval(timer);setStatus("Paused")}
+function stop(){state="stopped";clearInterval(timer);if(ctx){ctx.close();ctx=null}dr=null;idx=0;times=[];setStatus("Stopped");curK=-1;playHl();draw()}
+function setStatus(s){$("status").textContent=s}
+/* ---------- UI ---------- */
+function load(){if(!gridBusy&&typeof renderGrid==="function")syncGridFromText();
+  raga=buildRaga($("raga").value);
+  const r=parseNotation($("nt").value,raga,true);queue=r.ev;warnList=r.warn;
+  $("warn").innerHTML=warnList.slice(0,8).map(w=>`<li>${w.replace(/</g,"&lt;")}</li>`).join("")+(warnList.length>8?`<li>…and ${warnList.length-8} more</li>`:"");
+  if(idx>queue.length)idx=queue.length;{let cu=0;queue.forEach(e=>{e.up=cu;cu+=e.u})}{const LS=getLines($("nt").value);let cl=0;lyR=LS.map(()=>[1e9,0]);queue.forEach(e=>{if(e.pos!=null){const k=LS.findIndex(L=>e.pos>=L.s&&e.pos<L.e);if(k>=0)cl=k}e.ln=cl;const r=lyR[cl];if(r&&e.u>0){r[0]=Math.min(r[0],e.up);r[1]=Math.max(r[1],e.up+e.u)}});lyLines=LS.map(L=>L.lyric)}S=secs();selG=new Set([...selG].filter(g=>g<S.length));setSel(true);tabv();info();draw()}
+function stats(){}
+function info(){stats();
+  const f=sa()||0,lab=(a)=>a.map(x=>{const L=x.lab||SEMI_LABEL[mod(x.semi)];return `<span class="swchip" style="--c:${COL[L[0]]}">${(t=>t[0]+(x.semi>=12?"\u0307":"")+t.slice(1))(L.replace(/\/.*/,""))}</span>`}).join("");
+  const r=raga;$("legend").innerHTML=`<span class="lb" style="margin:0 .6rem 0 0;align-self:center">Ārohaṇa</span>${lab(r.aro)}<span class="lb" style="margin:0 .6rem 0 1rem;align-self:center">Avarohaṇa</span>${lab(r.ava)}`;$("info").innerHTML=`<div><b>${r.n<=72?`Janaka ${r.n}`:""}</b> ${r.name===MELA[r.n-1]?"(Melakarta)":"· janya of "+MELA[r.n-1]+" ("+r.n+")"}</div>
+  <div style="color:var(--mute)">Varja: ${r.varja.join(", ")||"none"} · Vakra: ${r.vakra?"yes":"no"} · Anya swara: ${r.anya.join(", ")||"none"}</div>`;
+  const names=["S","R1","R2","R3","G1","G2","G3","M1","M2","P","D1","D2","D3","N1","N2","N3"];
+  $("sw16").innerHTML=names.map(n=>{const s=SW[n];return `<div class="p-2 rounded-lg" style="border:1px solid var(--line);border-left:4px solid ${COL[n[0]]}"><b>${n}</b><br><span style="color:var(--mute)">${SWN[n]}</span></div>`}).join("")}
+const STR=[-12,-5,0,7,12],STC=["#e5484d","#f5c518","#3b82f6","#f28c28","#3ecf5a"],WIN=12,LOOK=3,TH=.07;let camLo=0,pulse=0,lastSt=-1,rip=[];
+let sel=null,selG=new Set(),S=[],selK=-1,curK=-1,cheers=[],pf=0,dr=null,hmP=[],hmLast=-2,lyLines=[],lyR=[],lyKeep=0;const AL={8:"Todi",29:"Shankarabharanam",51:"Pantuvarali",65:"Kalyani",36:"Chalanattai"};
+const place=(s,f)=>{let i;if(f!=null&&f>=0&&f<5&&s-STR[f]>=0&&s-STR[f]<=WIN)i=f;else if(s>=0&&s<=WIN)i=2;else if(s<0)i=s>=-5?1:0;else i=4;return{str:i,fret:Math.min(Math.max(0,s-STR[i]),WIN)}};
+/* concert scene: focus lights on a truss, a crowd with raised hands, hanging PA arrays and stage monitors in front */
+function scene(c,w,h,tt){
+  const play=state==="playing",hue0=play?(tt*35)%360:215;
+  c.save();
+  /* crowd, far rows to near rows */
+  const rnd=(a,b)=>{const s=Math.sin(a*127.1+b*311.7)*43758.5453;return s-Math.floor(s)};
+  [[.38,.016,.5],[.44,.021,.65],[.51,.027,.8],[.59,.034,1]].forEach(([ry,rs,al],ri)=>{const r=rs*h,n=Math.ceil(w/(r*2.1))+1;
+    for(let i=0;i<n;i++){
+      const x=i*r*2.1+(rnd(i,ri)-.5)*r,bob=Math.sin(tt*(play?5:1.6)+i*1.9+ri)*(play?r*.22:r*.06)*(1+pulse),y=h*ry+(rnd(i+9,ri)-.5)*r*.8+bob;
+      const fill=`rgba(${12+ri*6},${6+ri*2},${26+ri*6},${.55+al*.4})`;
+      c.fillStyle=fill;c.beginPath();c.arc(x,y-r*.9,r*.72,0,7);c.fill();c.beginPath();c.ellipse(x,y+r*.9,r*1.25,r*1.1,0,0,7);c.fill();
+      c.strokeStyle=`hsla(${(hue0+x/w*120)%360},90%,70%,${.12+pulse*.2})`;c.lineWidth=1.2;c.beginPath();c.arc(x,y-r*.9,r*.72,Math.PI*1.1,Math.PI*1.9);c.stroke();
+      if(rnd(i,ri+5)>.5){const sd=rnd(i+3,ri)>.5?1:-1,wv=Math.sin(tt*(play?7:2)+i*2.3)*r*(play?.5:.15);
+        c.strokeStyle=fill;c.lineWidth=Math.max(2,r*.32);c.lineCap="round";
+        c.beginPath();c.moveTo(x+sd*r*.95,y+r*.3);c.lineTo(x+sd*r*1.5+wv,y-r*2.5);c.stroke();
+        c.beginPath();c.arc(x+sd*r*1.5+wv,y-r*2.7,r*.32,0,7);c.fill();
+        if(rnd(i+5,ri)>.7){c.beginPath();c.moveTo(x-sd*r*.95,y+r*.3);c.lineTo(x-sd*r*1.4-wv,y-r*2.3);c.stroke();c.beginPath();c.arc(x-sd*r*1.4-wv,y-r*2.5,r*.3,0,7);c.fill()}}
+    }});
+  /* focus lights: a truss with light beams that sway and change colour */
+  c.globalCompositeOperation="lighter";
+  for(let i=0;i<6;i++){const fx=w*(.1+.8*i/5),hu=(hue0+i*40)%360,tx=w*.5+(fx-w*.5)*.55+Math.sin(tt*.6+i*1.3)*w*.05,ty=h*.74,bw=w*.07,k=.14+pulse*.16+(play?.05:0);
+    const g=c.createLinearGradient(fx,22,tx,ty);g.addColorStop(0,`hsla(${hu},100%,70%,${k+.1})`);g.addColorStop(1,`hsla(${hu},100%,60%,0)`);
+    c.fillStyle=g;c.beginPath();c.moveTo(fx-5,22);c.lineTo(fx+5,22);c.lineTo(tx+bw,ty);c.lineTo(tx-bw,ty);c.closePath();c.fill();
+    const lg=c.createRadialGradient(fx,22,0,fx,22,22+pulse*12);lg.addColorStop(0,`hsla(${hu},100%,85%,.95)`);lg.addColorStop(1,`hsla(${hu},100%,60%,0)`);c.fillStyle=lg;c.fillRect(fx-40,0,80,70)}
+  c.globalCompositeOperation="source-over";
+  c.strokeStyle="rgba(150,170,200,.35)";c.lineWidth=2;c.beginPath();c.moveTo(0,22);c.lineTo(w,22);c.stroke();
+  c.restore()}
+function gemFret(e,z,pl,st,d,now){
+  if(!(e.tech==="s"||e.tech==="d"))return pl.fret;
+  const q=queue.indexOf(e);let pv=null;for(let k=q-1;k>=0;k--)if(queue[k].t==="n"){pv=queue[k];break}
+  if(!pv)return pl.fret;
+  const pf=place(pv.semi,pv.str).fret,gs=Math.min(.14,Math.max(.03,d*.5));
+  if(now>=st){const k=Math.min(1,(now-st)/gs);return pf+(pl.fret-pf)*k}
+  const k=Math.min(1,Math.max(0,1-z/.3));
+  return pf+(pl.fret-pf)*k;
+}
+function draw(){
+  const cv=$("cv"),dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;if(!w)return;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);
+  let g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,"#0c3a52");g.addColorStop(.55,"#07202f");g.addColorStop(1,"#040d14");c.fillStyle=g;c.fillRect(0,0,w,h);
+  g=c.createRadialGradient(w/2,h*.3,10,w/2,h*.3,w*.55);g.addColorStop(0,`hsla(${state==="playing"?(performance.now()/1000*30)%360:200},80%,55%,${.2+pulse*.22})`);g.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=g;c.fillRect(0,0,w,h);
+  [[.05,.2,"#2bb8ff"],[.14,.3,"#2bb8ff"],[.24,.38,"#2bb8ff"],[.95,.2,"#2bb8ff"],[.86,.3,"#2bb8ff"],[.76,.38,"#2bb8ff"],[.34,.32,"#ff7a7a"],[.66,.32,"#ff7a7a"]].slice(0,0).forEach(([x,y],j)=>{const pt=performance.now()/1000,R=26+pulse*16,hu=(pt*(state==="playing"?45:8)+j*47)%360;g=c.createRadialGradient(x*w,y*h,0,x*w,y*h,R);g.addColorStop(0,`hsla(${hu},100%,65%,1)`);g.addColorStop(.25,`hsla(${hu},100%,60%,.65)`);g.addColorStop(1,`hsla(${hu},100%,55%,0)`);c.fillStyle=g;c.fillRect(x*w-R,y*h-R,2*R,2*R)});
+  const tt=performance.now()/1000;
+  [].forEach(([k,yy,ph])=>{c.save();c.strokeStyle=k;c.lineWidth=2.5;c.shadowColor=k;c.shadowBlur=14;c.globalAlpha=.5+.45*pulse;c.beginPath();for(let x=0;x<=w;x+=8){const y=h*yy+Math.sin(x*.012+tt*2+ph)*(8+pulse*18)+Math.sin(x*.03-tt*3+ph)*(3+pulse*8);x?c.lineTo(x,y):c.moveTo(x,y)}c.stroke();c.restore()});
+  scene(c,w,h,tt);
+  const xl=w*.1,xr=w*.9,cw=(xr-xl)/WIN,y0=h*.6,y1=h*.77,rh=(y1-y0)/4,vx=w/2,vy=h*.2,ym=(y0+y1)/2;
+  const ca=Math.cos(TH),sn=Math.sin(TH),R=(X,Y)=>[vx+(X-vx)*ca-(Y-ym)*sn,ym+(X-vx)*sn+(Y-ym)*ca];
+  const pr=z=>1/(1+4*z),pj=(X,Y,p)=>{const q=R(X,Y);return[vx+(q[0]-vx)*p,vy+(q[1]-vy)*p]};
+  /* timeline: scheduled notes use their real times, the rest are projected from the live tempo */
+  const us=unitSec(),live=ctx&&state!=="stopped",now=live?ctx.currentTime:-.4;
+  let a=live?nextT:0,fut=!live;const its=[],act={};
+  for(let i=live?Math.max(0,idx-40):(sel?sel.s:0),gd=0;i<queue.length&&gd<600;i=(sel&&i>=idx&&i+1>=sel.e)?sel.s:i+1,gd++){if(i>=idx)fut=true;
+    const e=queue[i];let st,d;
+    if(!fut){if(!times[i])continue;st=times[i][0];d=times[i][1]}else{st=a;d=e.u*us;a+=d}
+    if(st-now>LOOK&&fut)break;
+    if(st+d<now-.02)continue;
+    const it={e,st,d};its.push(it);
+    if(e.t==="n"&&st<=now&&now<st+d){const p=place(e.semi,e.str);act[p.str]=p.fret;it.on=1}
+  }
+  let mf=0;const used=new Set();
+  for(const t of its)if(t.e.t==="n"){const p=place(t.e.semi,t.e.str);if(t.st-now<1.6)used.add(p.fret);if(t.st-now<2)mf=Math.max(mf,p.fret)}
+  camLo=0;
+  const on1=its.find(t=>t.on),chip=$("now");if(on1&&on1.e.k!==curK){curK=on1.e.k;playHl()}
+  /* hand-gesture metronome: beat position comes from the notation's own timing */
+  let lyL=-1,lyP=0;{let hb=-1;const cu=live?its.find(t=>t.e.u>0&&t.st<=now&&now<t.st+t.d):null;if(cu&&cu.e.up!=null){lyL=cu.e.ln;lyP=cu.e.up+(now-cu.st)/cu.d*cu.e.u}if(live&&hmP.length){if(cu&&cu.e.up!=null)hb=Math.floor(lyP+1e-6)%hmP.length;else hb=hmLast}if(hb!==hmLast){hmLast=hb;hmApply(hb)}}
+  if(on1){chip.textContent=on1.e.lab;chip.style.background=COL[on1.e.lab[0]];chip.style.color="#0b1a1a"}else{chip.textContent="–";chip.style.background="transparent";chip.style.color=""}
+  pulse=on1?1:pulse*.92;{const c2=$("nowS");c2.textContent=chip.textContent;c2.style.background=chip.style.background;c2.style.color=chip.style.color||"#e6f6ff"}
+  /* speakers */
+  const tn=performance.now()/1000;if(on1&&on1.st!==lastSt){lastSt=on1.st;rip.push({t:tn,c:STC[place(on1.e.semi,on1.e.str).str]})}if(!live)lastSt=-1;rip=rip.filter(r=>tn-r.t<1.1);
+  const wv=(cx,cy,r,am,ph,al,cl)=>{c.strokeStyle=cl;c.globalAlpha=al;c.lineWidth=2;c.beginPath();for(let k=0;k<=64;k++){const t=k/64*6.2832,rr=r+am*Math.sin(t*7+ph),X=cx+Math.cos(t)*rr*.8,Y=cy+Math.sin(t)*rr;k?c.lineTo(X,Y):c.moveTo(X,Y)}c.closePath();c.stroke();c.globalAlpha=1};
+  for(const sd of[1,-1]){const sx=sd>0?w*.075:w*.925,r0=Math.min(w*.045,42)*.6,Q=Math.min(r0*2.6,h*.1),rr=Q/2.6,rh=Q*.5,base=h*.27,wy=base-Q/2,uy=base-Q-4-rh/2;
+    const cb=(yc,hf)=>{c.fillStyle="rgba(8,30,44,.9)";c.strokeStyle="#2a6d89";c.lineWidth=2;c.beginPath();c.roundRect(sx-Q/2,yc-hf,Q,2*hf,8);c.fill();c.stroke()};cb(wy,Q/2);cb(uy,rh/2);
+    if(0){const hd=hh*.28,yh=wy-2*hh-5-hh-hd-3,a=sx-sd*ws*.8,b=sx+sd*ws*.8;c.save();c.globalAlpha=.75;c.beginPath();c.moveTo(a,yh-hd);c.lineTo(b,yh-hd*.9);c.lineTo(b,yh+hd*.9);c.lineTo(a,yh+hd);c.closePath();c.fillStyle="rgba(8,10,14,.5)";c.fill();c.strokeStyle="rgba(205,215,225,.45)";c.lineWidth=2;c.stroke();c.fillStyle="rgba(205,215,225,.5)";for(let k=0;k<9;k++){c.beginPath();c.arc(a+(b-a)*(.18+k*.075),yh,Math.max(1.5,hd*.14),0,7);c.fill()}
+      c.fillStyle="rgba(205,215,225,.4)";for(const dx of[-.7,.7]){c.beginPath();c.arc(sx+dx*ws,wy+hh+6,4,0,7);c.fill()}c.restore()}
+    for(let k=0;k<4;k++)wv(sx,wy,rr*(.35+k*.2)*(1+pulse*.1),rr*.03*(1+pulse*5),tn*(8+k*2),.85-k*.17,"#50d2ff");wv(sx,uy,rr*.4,rr*.02*(1+pulse*4),tn*10,.8,"#50d2ff");for(const r of rip){const a=(tn-r.t)/1.1;wv(sx,wy,rr*(.5+a*3.4),rr*.1*(1-a),tn*14,(1-a)*.9,r.c)}}
+  /* top progress bars */
+  const grp=[];let cur=0,gi=0;queue.forEach((e,i)=>{if(i===idx)gi=grp.length;if(e.t==="bar"){if(cur){grp.push(cur);cur=0}}else if(e.t==="n")cur++});if(cur)grp.push(cur);
+  if(!live)gi=-1;else if(idx>=queue.length)gi=grp.length;
+  const bx=w*.1,bw=w*.8,mx=Math.max(1,...grp),gwid=bw/Math.max(1,grp.length);
+  grp.forEach((cnt,i)=>{const bh=6+26*cnt/mx;c.fillStyle=i<gi?"#d93bff":i===gi?"#ff63ff":"#5b2a78";c.fillRect(bx+i*gwid+1,46-bh,gwid-3,bh);if(selG.has(i)){c.strokeStyle="#7df9ff";c.lineWidth=2;c.strokeRect(bx+i*gwid,44-bh,gwid-1,bh+4)}});
+  c.fillStyle="rgba(150,215,235,.75)";c.font="12px Instrument Sans,sans-serif";c.textAlign="left";c.textBaseline="alphabetic";c.fillText(selG.size?"Practice loop on":"Click the bars to loop a section",bx,62);
+  c.fillStyle="#ff9d1f";c.fillRect(bx,46,bw*Math.max(0,Math.min(1,gi/Math.max(1,grp.length))),3);
+  /* highway floor, fret lanes, tala bars */
+  c.beginPath();c.moveTo(...pj(xl,y1+6,1));c.lineTo(...pj(xr,y1+6,1));c.lineTo(...pj(xr,y0,.2));c.lineTo(...pj(xl,y0,.2));c.closePath();
+  g=c.createLinearGradient(0,y1,0,vy+(y0-vy)*.2);g.addColorStop(0,"rgba(30,100,170,.55)");g.addColorStop(1,"rgba(10,40,80,.05)");c.fillStyle=g;c.fill();
+  const f0=Math.ceil(camLo);c.lineWidth=1;c.strokeStyle="rgba(90,210,255,.4)";
+  for(let f=f0;f<=f0+WIN;f++){const X=xl+(f-camLo)*cw;if(X<xl-1||X>xr+1)continue;c.beginPath();c.moveTo(...pj(X,y1+6,1));c.lineTo(...pj(X,y0,.2));c.stroke()}
+  for(const t of its)if(t.e.t==="bar"){const z=Math.max(0,(t.st-now)/LOOK);if(z>1)continue;const p=pr(z);c.strokeStyle="rgba(255,255,255,"+(.15+.5*p)+")";c.lineWidth=1+2*p;c.beginPath();c.moveTo(...pj(xl,ym,p));c.lineTo(...pj(xr,ym,p));c.stroke()}
+  /* notes, far to near */
+  for(let k=its.length-1;k>=0;k--){
+    const {e,st,d,on}=its[k];if(e.t!=="n")continue;const pl=place(e.semi,e.str);if(pl.fret<0)continue;
+    const z=Math.max(0,(st-now)/LOOK);if(z>1)continue;
+    const p=pr(z),Y=y0+pl.str*rh,col=STC[pl.str],open=pl.fret===0,Xc=xl+(gemFret(e,z,pl,st,d,now)-1-camLo+.5)*cw;
+    if(!open&&d>.2){const pe=pr(Math.min(1,(st+d-now)/LOOK)),A=pj(Xc,Y,p),B=pj(Xc,Y,pe),tw=cw*.34;c.fillStyle=col;c.globalAlpha=.78;c.beginPath();c.moveTo(A[0]-tw*p,A[1]);c.lineTo(A[0]+tw*p,A[1]);c.lineTo(B[0]+tw*pe,B[1]);c.lineTo(B[0]-tw*pe,B[1]);c.closePath();c.fill();c.globalAlpha=1;c.strokeStyle="rgba(255,255,255,.75)";c.lineWidth=1.5;c.stroke()}
+    const gw=cw*.92*p,gh=rh*(open?.7:.98)*p,P2=open?[0,0]:pj(Xc,Y,p),OA=pj(xl,Y,p),OB=pj(xr,Y,p),cx=open?(OA[0]+OB[0])/2:P2[0],cy=open?(OA[1]+OB[1])/2:P2[1];
+    c.save();if(on){c.shadowColor=col;c.shadowBlur=22}
+    c.fillStyle=col;c.strokeStyle="rgba(255,255,255,.85)";c.lineWidth=Math.max(1,2*p);
+    if(open){c.lineCap="round";c.strokeStyle="rgba(255,255,255,.85)";c.lineWidth=gh+Math.max(2,3*p);c.beginPath();c.moveTo(...OA);c.lineTo(...OB);c.stroke();c.strokeStyle=col;c.lineWidth=gh;c.stroke()}else{c.beginPath();c.roundRect(cx-gw/2,cy-gh/2,gw,gh,Math.max(2,5*p));c.fill();c.stroke()}c.restore();
+    c.fillStyle="#ffc23d";c.font="700 "+Math.max(10,gh*.8)+"px Instrument Sans,sans-serif";c.textAlign="center";c.textBaseline="middle";c.lineJoin="round";c.lineWidth=Math.max(2,gh*.14);c.strokeStyle="#08131f";c.strokeText(e.lab,cx,cy+p);c.fillText(e.lab,cx,cy+p);if(e.tech){c.font="700 "+Math.max(8,gh*.5)+"px sans-serif";c.fillStyle="#fff";c.fillText({h:"H",p:"P",s:"/",d:"\\",o:"~",g:"≈"}[e.tech],cx,cy-gh*.75)}
+    {const dx=open?OA[0]+gh*.5:cx-gw/2+gh*.28,dy=open?OA[1]:cy-gh/2+gh*.28;c.fillStyle=COL[e.lab[0]];c.beginPath();c.arc(dx,dy,Math.max(2.5,gh*.17),0,7);c.fill()}
+  }
+  /* tech overlays: slides, shakes and gamakas drawn along the string on the highway */
+  for(const it of its){
+    const e=it.e;if(e.t!=="n"||!e.tech||it.st+it.d<now)continue;
+    const z0=(it.st-now)/LOOK;if(z0>1)continue;
+    const pl=place(e.semi,e.str),Y=y0+pl.str*rh,col=STC[pl.str];
+    const pi=queue.indexOf(e);let pv=null;for(let q=pi-1;q>=0;q--)if(queue[q].t==="n"){pv=queue[q];break}
+    const pfret=pv?place(pv.semi,pv.str).fret:pl.fret,N=18,pts=[];
+    for(let k=0;k<=N;k++){
+      const tt=it.st+it.d*k/N,z=Math.max(0,(tt-now)/LOOK),p=pr(z),tl=k/N;
+      let fr=pl.fret;
+      if(e.tech==="s"||e.tech==="d")fr=pfret+(pl.fret-pfret)*Math.min(1,tl/.3);
+      const X=xl+(fr-.5-camLo)*cw;
+      let off=0;
+      if(e.tech==="o")off=Math.sin(tt*2*Math.PI*8)*rh*.22;
+      if(e.tech==="g")off=Math.sin(tt*2*Math.PI*5.5)*rh*.3*(.4+.6*Math.min(1,tl*3));
+      const q=pj(X,Y+off,p);pts.push([q[0],q[1]]);
+    }
+    c.save();c.strokeStyle=col;c.lineWidth=3;c.lineCap="round";c.shadowColor=col;c.shadowBlur=10;c.globalAlpha=.9;
+    c.beginPath();pts.forEach((q,k)=>k?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.stroke();c.restore();
+  }
+  /* fretboard at the strike line */
+  c.fillStyle="rgba(10,40,60,0)";c.beginPath();c.moveTo(...R(0,y0-16));c.lineTo(...R(w,y0-16));c.lineTo(...R(w,y1+16));c.lineTo(...R(0,y1+16));c.closePath();c.fill();
+  for(const s in act){const f=act[s];if(f>0){const X1=xl+(f-1-camLo)*cw,X2=X1+cw;c.fillStyle="rgba(255,190,80,.16)";c.beginPath();c.moveTo(...R(X1,y0-16));c.lineTo(...R(X2,y0-16));c.lineTo(...R(X2,y1+16));c.lineTo(...R(X1,y1+16));c.closePath();c.fill()}}
+  c.strokeStyle="rgba(200,215,225,.45)";c.lineWidth=2;
+  for(let f=f0;f<=f0+WIN;f++){const X=xl+(f-camLo)*cw;if(X<xl-1||X>xr+1)continue;c.beginPath();c.moveTo(...R(X,y0-16));c.lineTo(...R(X,y1+16));c.stroke()}
+  for(let i=0;i<5;i++){const y=y0+i*rh;c.strokeStyle=STC[i];c.lineWidth=2+(4-i)*.7;if(act[i]!==undefined){c.shadowColor=STC[i];c.shadowBlur=14;c.lineWidth+=1.5}c.beginPath();c.moveTo(...R(0,y));c.lineTo(...R(w,y));c.stroke();c.shadowBlur=0}
+  for(const s in act){const f=act[s];if(f>0){c.save();c.shadowColor="#fff";c.shadowBlur=14;c.strokeStyle="#fff";c.lineWidth=4;for(const X of[xl+(f-1-camLo)*cw,xl+(f-camLo)*cw]){c.beginPath();c.moveTo(...R(X,y0-16));c.lineTo(...R(X,y1+16));c.stroke()}
+    const q=R(xl+(f-.5-camLo)*cw,y0+(+s)*rh);c.shadowColor=STC[s];c.shadowBlur=20;c.fillStyle=STC[s];c.globalAlpha=.25;c.beginPath();c.roundRect(q[0]-cw*.42,q[1]-rh*.45,cw*.84,rh*.9,5);c.fill();c.globalAlpha=1;c.strokeStyle="#fff";c.lineWidth=2;c.stroke();c.restore()}}
+  c.font="700 "+Math.max(13,cw*.3)+"px Instrument Sans,sans-serif";c.textAlign="center";c.textBaseline="alphabetic";
+  const af=new Set(Object.values(act));
+  const RM={1:"I",3:"III",5:"V",7:"VII",9:"IX",12:"XII"};
+  for(const f of[1,3,5,7,9,12]){const q=R(xl+(f-.5)*cw,y0+1.5*rh),r=Math.max(8,Math.min(cw*.36,rh*.55)),hit=af.has(f),up=used.has(f);
+    c.save();if(hit){c.shadowColor="#ffc23d";c.shadowBlur=18}
+    c.restore();
+    c.fillStyle=hit?"rgba(255,194,61,.7)":"rgba(190,230,245,.3)";c.font="600 "+Math.round(r*1.3)+"px Spectral,Georgia,serif";c.textAlign="center";c.textBaseline="middle";c.fillText(RM[f],q[0],q[1])}
+  c.textBaseline="alphabetic";c.font="700 "+Math.max(13,cw*.3)+"px Instrument Sans,sans-serif";
+  for(let f=1;f<=WIN;f++){const q=R(xl+(f-.5)*cw,y1+44),hit=af.has(f);c.save();if(hit){c.shadowColor="#ffc23d";c.shadowBlur=14}c.fillStyle=hit?"#ffc23d":"rgba(150,215,235,.5)";c.fillText(f,q[0],q[1]);c.restore()}
+  /* audience */
+  cheers=cheers.filter(k=>tt-k.t<2.2);const clap=cheers.length>0;
+  c.save();c.fillStyle="#050d16";
+  for(let k=0;k<0;k++){const x=(k+.5)/22*w,r=Math.max(8,w*.012),y=h-16+Math.sin(tt*(clap?9:2)+k*1.7)*(clap?5:1.5);c.beginPath();c.arc(x,y-r*1.2,r,0,7);c.fill();c.beginPath();c.ellipse(x,y+r*1.2,r*1.8,r*1.6,0,0,7);c.fill();
+    if(clap){c.strokeStyle="#050d16";c.lineWidth=r*.7;c.lineCap="round";const up=Math.sin(tt*14+k)>0;c.beginPath();c.moveTo(x-r*1.3,y+r*.4);c.lineTo(x-r*(up?.2:.9),y-r*(up?2.4:1.8));c.moveTo(x+r*1.3,y+r*.4);c.lineTo(x+r*(up?.2:.9),y-r*(up?2.4:1.8));c.stroke()}}
+  c.restore();
+  for(const k of []){const a=(tt-k.t)/2.2;c.save();c.globalAlpha=1-a;c.font="700 "+Math.round(Math.max(16,w*.022))+"px Instrument Sans,sans-serif";c.textAlign="center";c.textBaseline="alphabetic";c.fillStyle="#ffe9fb";c.shadowColor="#ff3ea5";c.shadowBlur=18;c.fillText(k.w,k.x*w,h*.88-a*h*.3);c.restore()}
+  /* stage 2: focus-light beams from the rig */
+  {const t2=tn,bp=pulse,beamX=[.2,.4,.6,.8];
+   beamX.forEach((bx,i)=>{const col=`hsla(${(t2*25+i*70)%360},95%,60%,`,x1=w*(bx+(i%2?.05:-.05));
+     const g=c.createLinearGradient(0,0,0,h*.85);g.addColorStop(0,col+(.26+bp*.2)+")");g.addColorStop(1,col+"0)");
+     c.save();c.globalCompositeOperation="screen";c.fillStyle=g;c.beginPath();c.moveTo(w*bx-6,0);c.lineTo(w*bx+6,0);c.lineTo(x1+w*.12,h*.85);c.lineTo(x1-w*.12,h*.85);c.closePath();c.fill();c.restore()});
+  }
+  /* sahitya (lyrics) of the line being played: below the player head, above the falling notes; words light up as the line moves on */
+  {const ln=lyL>=0?lyL:(live?lyKeep:0),txt=lyLines[ln];if(live&&lyL>=0)lyKeep=lyL;
+    if(txt){const ws=txt.split(" "),r=lyR[ln]||[0,1],pg=live&&lyL>=0?Math.min(.999,Math.max(0,(lyP-r[0])/Math.max(1e-6,r[1]-r[0]))):0,cur=live?Math.floor(pg*ws.length):-1;
+      let fs=Math.round(Math.max(18,Math.min(30,w*.026)));c.save();c.textBaseline="middle";c.textAlign="left";
+      const meas=()=>{c.font="700 "+fs+"px Instrument Sans,sans-serif";const wid=ws.map(x=>c.measureText(x).width),gap=fs*.5;return{wid,gap,tot:wid.reduce((a,b)=>a+b,0)+gap*(ws.length-1)}};
+      let m=meas();if(m.tot>w*.92){fs=Math.max(12,Math.floor(fs*w*.92/m.tot));m=meas()}
+      let x=(w-m.tot)/2;const y=Math.max(92,h*.14);
+      ws.forEach((wd,i)=>{const on=live&&i<=cur;c.shadowColor=on?"#ffc23d":"rgba(0,0,0,.7)";c.shadowBlur=on?14:6;c.fillStyle=on?"#ffd466":"rgba(230,245,255,.78)";c.fillText(wd,x,y);x+=m.wid[i]+m.gap});c.restore()}}
+  if(state==="playing")requestAnimationFrame(draw)}
+function drawOld(){
+  const cv=$("cv"),dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;
+  if(cv.width!==w*dpr){cv.width=w*dpr;cv.height=h*dpr}
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+  const css=getComputedStyle(document.documentElement),col=n=>css.getPropertyValue(n).trim();
+  const notes=queue.filter(e=>e.t==="n");
+  const total=queue.reduce((a,e)=>a+e.u,0)||1;
+  const lo=Math.min(0,...notes.map(n=>n.semi))-1,hi=Math.max(12,...notes.map(n=>n.semi))+1,pad=10;
+  const Y=s=>h-pad-(s-lo)/(hi-lo)*(h-2*pad);
+  c.strokeStyle=col("--line");c.lineWidth=1;c.font="11px Instrument Sans,sans-serif";c.fillStyle=col("--mute");
+  for(const s of(raga?raga.scale:[0,2,4,5,7,9,11])){for(let o=-1;o<=1;o++){const v=s+12*o;if(v<lo||v>hi)continue;c.beginPath();c.moveTo(0,Y(v));c.lineTo(w,Y(v));c.stroke();if(o===0){c.fillStyle=COL[SEMI_LABEL[s][0]];c.fillText(SEMI_LABEL[s].split("/")[0],4,Y(v)-2)}}}
+  let u=0;const now=ctx&&state!=="stopped"?ctx.currentTime:-1;{const n=$("now");n.textContent="–";n.style.background="transparent";n.style.color=""}
+  queue.forEach((e,i)=>{const x=40+u/total*(w-50),ww=Math.max(3,e.u/total*(w-50)-2);u+=e.u;
+    if(e.t==="bar"){c.fillStyle=col("--line");c.fillRect(x-1,0,1,h);return}
+    if(e.t!=="n")return;const t=times[i],on=t&&now>=t[0]&&now<t[0]+t[1];
+    const cc=COL[e.lab[0]];c.fillStyle=cc;c.globalAlpha=on?1:(t&&now>t[0]?.5:.85);if(on){const n=$("now");n.textContent=e.lab;n.style.background=cc;n.style.color="#0b1a1a"}
+    c.beginPath();c.roundRect(x,Y(e.semi)-5,ww,10,5);if(on){c.shadowColor=cc;c.shadowBlur=16}c.fill();c.shadowBlur=0;c.globalAlpha=1});
+  if(state==="playing")requestAnimationFrame(draw)}
+function fillRagas(q){q=(q||"").toLowerCase().trim();const s=$("raga"),cur=s.value,curT=s.selectedOptions[0]?s.selectedOptions[0].text:"";let h="",found=false;
+  for(let n=1;n<=72;n++){const lab=`${n}. ${MELA[n-1]}${AL[n]?" ("+AL[n]+")":""}`,gm=!q||lab.toLowerCase().includes(q),o=[[`m:${n}`,`${MELA[n-1]}${AL[n]?" / "+AL[n]:""} (melakarta)`]];
+    JANYA.forEach((j,i)=>{if(j[1]===n)o.push([`j:${i}`,j[0]])});
+    const f=o.filter(x=>gm||x[1].toLowerCase().includes(q));
+    if(f.length)h+=`<optgroup label="${lab} · ${f.length}">${f.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join("")}</optgroup>`;
+    if(f.some(x=>x[0]===cur))found=true}
+  s.innerHTML=(cur&&!found?`<optgroup label="Current"><option value="${cur}">${curT}</option></optgroup>`:"")+(h||`<option value="${cur||"j:0"}">No match</option>`);
+  s.value=cur||"j:0"}
+function fillRagasOld(){$("raga").innerHTML=`<optgroup label="Janya rāgas">${JANYA.map((j,i)=>`<option value="j:${i}">${j[0]}</option>`).join("")}</optgroup><optgroup label="Melakarta (1–72)">${MELA.map((m,i)=>`<option value="m:${i+1}">${i+1}. ${m}</option>`).join("")}</optgroup>`}
+const SAMPLE="S R/G M G *P D , | S'/D N D P M G ~R S ;\nS R G P | D S' - , | S' D P G | R G R S ;";
+fillRagas();$("raga").value="j:0";$("legend").innerHTML=`<span class="lb" style="margin:0 .6rem 0 0;align-self:center">Mandolin strings, low to high</span>`+STC.map((c,i)=>`<span class="swchip" style="--c:${c}">${["S\u0323","P\u0323","S","P","S\u0307"][i]}</span>`).join("");$("nt").value=SAMPLE;load();
+["raga"].forEach(i=>$(i).addEventListener("change",load));
+$("nt").addEventListener("input",load);
+["tonic","tune"].forEach(i=>$(i).addEventListener("input",info));
+$("bpm").addEventListener("input",()=>{$("bpmv").textContent=$("bpm").value;stats()});
+["kala","gati"].forEach(i=>$(i).addEventListener("change",stats));
+let volLvl=.7;
+function volSet(v){volLvl=Math.min(1,Math.max(0,v));$("vk").setAttribute("aria-valuenow",Math.round(volLvl*100));$("vkn").setAttribute("transform",`rotate(${-135+270*volLvl} 20 20)`);if(master&&ctx)master.gain.setTargetAtTime(volLvl,ctx.currentTime,.03)}
+{const k=$("vk");let y0=0,v0=0,drag=false;
+  k.addEventListener("pointerdown",e=>{drag=true;y0=e.clientY;v0=volLvl;k.setPointerCapture(e.pointerId)});
+  k.addEventListener("pointermove",e=>{if(drag)volSet(v0+(y0-e.clientY)/150)});
+  k.addEventListener("pointerup",()=>{drag=false});
+  k.addEventListener("wheel",e=>{e.preventDefault();volSet(volLvl-Math.sign(e.deltaY)*.03)},{passive:false});
+  k.addEventListener("keydown",e=>{if(e.key==="ArrowUp"||e.key==="ArrowRight")volSet(volLvl+.05);if(e.key==="ArrowDown"||e.key==="ArrowLeft")volSet(volLvl-.05)});
+  volSet(volLvl)}
+$("pause").onclick=pause;
+if($("sample"))$("sample").onclick=()=>{$("nt").value=SAMPLE;load()};
+$("imp").onclick=()=>$("file").click();
+function secs(){const o=[];let st=0,cur=0;queue.forEach((e,i)=>{if(e.t==="bar"){if(cur){o.push([st,i]);cur=0}st=i+1}else if(e.t==="n")cur++});if(cur)o.push([st,queue.length]);return o}
+function setSel(quiet){if(!selG.size){sel=null}else{const a=[...selG].sort((x,y)=>x-y),z=a[a.length-1];sel={s:S[a[0]][0],e:S[z][1]}}if(!quiet&&state==="playing"&&sel)idx=sel.s}
+$("cv").addEventListener("click",ev=>{const r=$("cv").getBoundingClientRect(),x=ev.clientX-r.left,y=ev.clientY-r.top,w=r.width;if(y>66||!S.length)return;const g=Math.floor((x-w*.1)/(w*.8/S.length));if(g<0||g>=S.length)return;selG.has(g)?selG.delete(g):selG.add(g);setSel(false);draw()});
+function cheer(){if(!ctx)return;const t0=ctx.currentTime+.05;for(let k=0;k<0;k++){const b=ctx.createBuffer(1,2205,44100),dd=b.getChannelData(0);for(let j=0;j<2205;j++)dd[j]=(Math.random()*2-1)*(1-j/2205)**2;const s=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=b;bp.type="bandpass";bp.frequency.value=1200+Math.random()*1800;g.gain.value=.25+Math.random()*.25;s.connect(bp);bp.connect(g);g.connect(master);s.start(t0+Math.random()*1.6)}
+  cheers.push({t:performance.now()/1000})}
+function tabv(){const L=["S\u0307","P","S","P\u0323","S\u0323"];let h=`<div class="tc lab">${L.map((x,j)=>`<i style="color:${STC[4-j]}">${x}</i>`).join("")}<s></s></div>`;let g=0,cnt=0;const nb=queue.some(e=>e.t==="bar");h+=`<div class="tg" data-g="0">`;
+  for(const e of queue){if(e.t==="bar"){h+=`<div class="tc bar">${"<i></i>".repeat(5)}<s></s></div></div><div class="tg" data-g="${++g}">`;continue}
+    if(e.t!=="n"){h+=`<div class="tc" style="min-width:20px;cursor:default">${"<i></i>".repeat(5)}<s></s></div>`;continue}
+    if(!nb&&++cnt>8){cnt=1;h+=`</div><div class="tg" data-g="${++g}">`}const p=place(e.semi,e.str);let c5="";for(let r=4;r>=0;r--)c5+=r===p.str?`<i><b>${e.tech?`<sup>${{h:"h",p:"p",s:"/",d:"\\",o:"~",g:"≈"}[e.tech]}</sup>`:""}${p.fret}</b></i>`:"<i></i>";
+    h+=`<div class="tc${e.k===selK?" sel":""}" data-k="${e.k}">${c5}<s style="color:${COL[e.lab[0]]}">${e.lab}</s></div>`}
+  $("tabv").innerHTML=`<div class="tabs">${h}</div></div>`;playHl()}
+function playHl(){const b=$("tabv");b.querySelectorAll(".on").forEach(x=>x.classList.remove("on"));const el=b.querySelector(`[data-k="${curK}"]`),gi=el&&state!=="stopped"?+el.closest(".tg").dataset.g:-1;b.querySelectorAll(".tg").forEach(x=>x.classList.toggle("gone",+x.dataset.g<gi));if(el){el.classList.add("on");b.scrollLeft=Math.max(0,el.offsetLeft-b.clientWidth/2)}}
+$("tabv").onclick=ev=>{const t=ev.target.closest("[data-k]");if(t){selK=+t.dataset.k;tabv()}};
+const nsel=()=>queue.find(x=>x.t==="n"&&x.k===selK);
+function edit(ch){const e=nsel();if(!e)return setStatus("Click a note in the tablature first");let t=$("nt").value.normalize("NFD"),p=e.pos,j=p-1;const pv=t.slice(Math.max(0,p-2),p);if(/[h\/\\~*]$/.test(pv)||/[SRGMPDNsrgmpdn0-9.'^\u0323\u0307]p$/.test(pv)){t=t.slice(0,p-1)+t.slice(p);p--}t=t.slice(0,p)+ch+t.slice(p);$("nt").value=t;load()}
+function strEdit(d){const e=nsel();if(!e)return setStatus("Click a note in the tablature first");const t=$("nt").value.normalize("NFD");let seg=t.slice(e.pos,e.pos+e.len).replace(/@\d/,"");
+  if(d){const cur=place(e.semi,e.str).str;let n=null;for(let s=cur+d;s>=0&&s<5;s+=d)if(e.semi-STR[s]>=0&&e.semi-STR[s]<=WIN){n=s;break}if(n===null)return setStatus("No other string can play this note");seg+="@"+(n+1)}
+  $("nt").value=t.slice(0,e.pos)+seg+t.slice(e.pos+e.len);load()}
+document.querySelectorAll("[data-tc]").forEach(b=>b.onclick=()=>edit(b.dataset.tc));
+document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>strEdit(+b.dataset.st));
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b));$("tab-stage").classList.toggle("hidden",b.dataset.t!=="stage");$("tab-studio").classList.toggle("hidden",b.dataset.t!=="studio");draw()});
+$("ins").innerHTML=["\u0323","\u0307"].map(m=>"SRGMPDN".split("").map(L=>`<button type="button" class="swchip" data-i="${L+m}" style="--c:${COL[L]};cursor:pointer">${L+m}</button>`).join("")).join("")+["h","p","/","\\","~","*","@"].map(x=>`<button type="button" class="swchip" data-i="${x}" style="--c:#8b93ff;cursor:pointer">${x}</button>`).join("");
+$("helpBtn").onclick=()=>{const p=$("helpPanel"),op=p.hidden;p.hidden=!op;$("helpBtn").setAttribute("aria-expanded",String(op));if(op)p.scrollIntoView({block:"nearest",behavior:"smooth"})};
+$("ins").onclick=e=>{const v=e.target.dataset.i;if(!v)return;const t=$("nt");t.setRangeText(v,t.selectionStart,t.selectionEnd,"end");t.focus();load()};
+/* tanpura tuning: the fourth string (Pa, Ma, Dha or Ni, in the lower octave) plus Sa, Sa and an upper Sa, from just intonation */
+const PICK={pa:.75,ma:2/3,dha:5/6,ni:15/16};
+function dronePat(){return[[PICK[$("tpt").value]||.75,0],[1,0],[1,3],[2,0]]}
+/* tanpura drone: four strings shaped by low-frequency oscillators */
+function jawariCurve(){const n=2048,c=new Float32Array(n),k=2.6;for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(k*x)/Math.tanh(k)}return c}
+function tanpuraWave(){const N=32,re=new Float32Array(N),im=new Float32Array(N);for(let k=1;k<N;k++)im[k]=(1/Math.pow(k,1.3))*(k%3===0?.7:1);return ctx.createPeriodicWave(re,im)}
+/* tanpura: four strings ring together, each with a rich 1/n^1.3 harmonic spectrum and slow breathing; the javari buzz comes from a sawtooth driven hard into a shaper and a band-pass, plus a drifting feedback comb on the bridge; a gourd-body impulse response adds hollow resonance */
+function droneOn(){initAudio();if(dr)return;const f=sa();if(!f)return;
+  const t0=ctx.currentTime,bus=ctx.createGain(),sh=ctx.createWaveShaper(),tone=ctx.createBiquadFilter(),out=ctx.createGain(),wave=tanpuraWave();
+  sh.curve=jawariCurve();sh.oversample="4x";
+  const comb=ctx.createDelay(.05),fb=ctx.createGain(),wet=ctx.createGain(),dry=ctx.createGain(),jl=ctx.createOscillator(),jg=ctx.createGain();
+  comb.delayTime.value=1/f;fb.gain.value=.55;wet.gain.value=.45;dry.gain.value=.7;
+  jl.frequency.value=.07;jg.gain.value=.00018;jl.connect(jg);jg.connect(comb.delayTime);jl.start(t0);
+  const sr=ctx.sampleRate,il=Math.floor(sr*.7),ib=ctx.createBuffer(1,il,sr),idd=ib.getChannelData(0);
+  for(let i=0;i<il;i++)idd[i]=(Math.random()*2-1)*Math.pow(1-i/il,3)*.5;
+  const gourd=ctx.createConvolver(),gw=ctx.createGain();gourd.buffer=ib;gw.gain.value=.18;
+  const buzzIn=ctx.createGain(),buzzSh=ctx.createWaveShaper(),buzzBP=ctx.createBiquadFilter(),buzzG=ctx.createGain(),bc=new Float32Array(2048);
+  for(let i=0;i<2048;i++){const x=i/1023-1;bc[i]=Math.tanh(x*8)}
+  buzzSh.curve=bc;buzzBP.type="bandpass";buzzBP.frequency.value=2200;buzzBP.Q.value=.9;buzzG.gain.value=.08;
+  buzzIn.connect(buzzSh);buzzSh.connect(buzzBP);buzzBP.connect(buzzG);buzzG.connect(sh);
+  bus.gain.setValueAtTime(0,t0);bus.gain.linearRampToValueAtTime(.9,t0+3);
+  tone.type="lowpass";tone.frequency.value=3200;tone.Q.value=.5;out.gain.value=tpVol*1.1;
+  bus.connect(sh);sh.connect(dry);sh.connect(comb);comb.connect(fb);fb.connect(comb);comb.connect(wet);dry.connect(tone);wet.connect(tone);
+  tone.connect(out);tone.connect(gourd);gourd.connect(gw);gw.connect(out);out.connect(master);
+  const d={bus,timer:0,nodes:[jl],os:[],out};
+  const bz=ctx.createOscillator(),bzg=ctx.createGain();bz.type="sawtooth";bz.frequency.value=f;bzg.gain.value=.35;bz.connect(bzg);bzg.connect(buzzIn);bz.start(t0);d.nodes.push(bz);d.os.push([bz,1]);
+  dronePat().forEach(([r,dc])=>{
+    const g=ctx.createGain();g.gain.value=.12;g.connect(bus);
+    const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=.05+Math.random()*.08;lg.gain.value=.035;lfo.connect(lg);lg.connect(g.gain);lfo.start(t0);d.nodes.push(lfo);
+    [.7,-.7].forEach(dd=>{const o=ctx.createOscillator(),og=ctx.createGain();o.setPeriodicWave(wave);o.frequency.value=f*r;o.detune.value=dc+dd;og.gain.value=.5;o.connect(og);og.connect(g);o.start(t0);d.nodes.push(o);d.os.push([o,r])});
+  });
+  dr=d}
+function droneOff(){if(!dr||!ctx)return;const d=dr;dr=null;clearInterval(d.timer);d.bus.gain.setTargetAtTime(0,ctx.currentTime,.3);setTimeout(()=>d.nodes.forEach(n=>{try{n.stop()}catch(e){}}),1800)}
+$("tp").onchange=()=>$("tp").checked?droneOn():droneOff();
+$("tpt").onchange=()=>{if($("tp").checked){droneOff();droneOn()}};
+$("key").onchange=()=>{$("tonic").value=$("key").value+"3";$("tonic").dispatchEvent(new Event("input"))};
+$("key").value="C#";
+let tpVol=.7;
+function tpSet(v){tpVol=Math.min(1,Math.max(0,v));const k=$("tpk");k.setAttribute("aria-valuenow",Math.round(tpVol*100));$("tpn").setAttribute("transform",`rotate(${-135+270*tpVol} 20 20)`);if(dr&&dr.out&&ctx)dr.out.gain.setTargetAtTime(tpVol*1.1,ctx.currentTime,.03)}
+{const k=$("tpk");let y0=0,v0=0,drag=false;
+  k.addEventListener("pointerdown",e=>{drag=true;y0=e.clientY;v0=tpVol;k.setPointerCapture(e.pointerId)});
+  k.addEventListener("pointermove",e=>{if(drag)tpSet(v0+(y0-e.clientY)/150)});
+  k.addEventListener("pointerup",()=>{drag=false});
+  k.addEventListener("wheel",e=>{e.preventDefault();tpSet(tpVol-Math.sign(e.deltaY)*.03)},{passive:false});
+  k.addEventListener("keydown",e=>{if(e.key==="ArrowUp"||e.key==="ArrowRight")tpSet(tpVol+.05);if(e.key==="ArrowDown"||e.key==="ArrowLeft")tpSet(tpVol-.05)});
+  tpSet(tpVol)}
+
+$("sKala").addEventListener("change",()=>{$("kala").value=$("sKala").value;$("kala").dispatchEvent(new Event("change"))});
+$("kala").addEventListener("change",()=>{$("sKala").value=$("kala").value});
+{const bp=$("bpm"),step=d=>{const v=Math.min(240,Math.max(30,(+bp.value||90)+d));if(v!==+bp.value){bp.value=v;bp.dispatchEvent(new Event("input"))}};
+  for(const [id,d] of [["sBpmM",-1],["sBpmP",1]]){const b=$(id);let t=null,iv=null;const end=()=>{clearTimeout(t);clearInterval(iv);t=iv=null};
+    b.addEventListener("pointerdown",e=>{e.preventDefault();step(d);end();t=setTimeout(()=>{iv=setInterval(()=>step(d),70)},380)});
+    ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,end));
+    b.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();step(d)}})}}
+$("bpm").addEventListener("input",()=>{$("sBpmv").textContent=$("bpm").value});
+$("sPlay").onclick=play;$("sStop").onclick=stop;
+$("sBpmv").textContent=$("bpm").value;$("sKala").value=$("kala").value;
+window.addEventListener("resize",draw);
+function setTheme(t){document.documentElement.dataset.theme=t;$("theme").innerHTML=`<i data-lucide="${t==="dark"?"sun":"moon"}"></i>`;if(window.lucide)lucide.createIcons();draw()}
+$("theme").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+setTheme(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+if(window.lucide)lucide.createIcons();
+/* ---------- Library: saved notations, stored in this browser ---------- */
+const LIB_KEY="swara-library-v1";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+function libGet(){try{return JSON.parse(localStorage.getItem(LIB_KEY)||"[]")}catch(e){return[]}}
+function libSet(a){try{localStorage.setItem(LIB_KEY,JSON.stringify(a));return true}catch(e){setStatus("Could not save in this browser");return false}}
+function libRender(){const a=libGet(),el=$("libList");
+  if(!a.length){el.innerHTML='<p class="text-sm" style="color:var(--mute)">No saved notations yet. Write one in Studio, then save it here.</p>';return}
+  el.innerHTML=a.map((x,i)=>`<div class="card p-3 flex flex-wrap items-center gap-2"><div class="flex-1 min-w-[12rem]"><div class="font-semibold">${esc(x.name)}</div><div class="text-sm" style="color:var(--mute)">${esc(x.label)} · Sa ${esc(x.tonic)} · ${esc(x.bpm)} BPM · kāla ${esc(x.kala)}</div></div><button class="btn text-sm" data-play="${i}"><i data-lucide="play"></i>Play</button><button class="btn text-sm" data-edit="${i}"><i data-lucide="pencil-line"></i>Open in Studio</button><button class="btn text-sm" data-del="${i}"><i data-lucide="trash-2"></i>Delete</button></div>`).join("");
+  if(window.lucide)lucide.createIcons()}
+let libEdit=-1;
+function libEditRender(){const box=$("libEditBox"),x=libGet()[libEdit];if(libEdit<0||!x){box.innerHTML="";return}
+  box.innerHTML=`<div class="card p-4 grid gap-3"><h3 class="font-semibold">Edit saved notation</h3><div><label class="lb" for="le-name">Name</label><input id="le-name" class="in" value="${esc(x.name)}"></div><div><label class="lb" for="le-nt">Notation</label><textarea id="le-nt" rows="6" class="in font-mono" spellcheck="false">${esc(x.notation)}</textarea></div><div class="flex gap-2"><button class="btn pri" data-save="1"><i data-lucide="check"></i>Save changes</button><button class="btn" data-cancel="1">Cancel</button></div></div>`;
+  if(window.lucide)lucide.createIcons()}
+$("libEditBox").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.cancel!=null){libEdit=-1;libRender();return}
+  if(b.dataset.save!=null){const a=libGet(),x=a[libEdit];if(!x)return;x.name=$("le-name").value.trim()||x.name;x.notation=$("le-nt").value;if(libSet(a)){libEdit=-1;libRender();setStatus("Updated "+x.name)}}};
+function libLoad(x){fillRagas("");$("raga").value=x.raga;$("tonic").value=x.tonic;$("bpm").value=x.bpm;$("bpmv").textContent=x.bpm;$("sBpmv").textContent=x.bpm;$("sKala").value=x.kala;$("kala").value=x.kala;$("gati").value=x.gati;$("nt").value=x.notation;load();info()}
+function libSave(){const a=libGet(),name=$("libName").value.trim()||"Notation "+(a.length+1),lbl=$("raga").selectedOptions[0]?$("raga").selectedOptions[0].text:"";
+  a.push({name,raga:$("raga").value,label:lbl,tonic:$("tonic").value,bpm:$("bpm").value,kala:$("kala").value,gati:$("gati").value,notation:$("nt").value,saved:Date.now()});
+  if(libSet(a)){$("libName").value="";libRender();setStatus("Saved “"+name+"”")}}
+function showTab(n){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x.dataset.t===n));$("tab-stage").classList.toggle("hidden",n!=="stage");$("tab-studio").classList.toggle("hidden",n!=="studio");$("tab-library").classList.toggle("hidden",n!=="library");draw()}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+$("libSave").onclick=libSave;
+$("libList").onclick=e=>{const b=e.target.closest("button");if(!b)return;const a=libGet();
+  if(b.dataset.play!=null){const x=a[+b.dataset.play];if(!x)return;stop();libLoad(x);showTab("stage");play()}
+  else if(b.dataset.edit!=null){const x=a[+b.dataset.edit];if(!x)return;libLoad(x);showTab("studio")}
+  else if(b.dataset.ed!=null){const x=a[+b.dataset.ed];if(x){libLoad(x);showTab("studio")}}
+  else if(b.dataset.del!=null){if(b.dataset.armed){a.splice(+b.dataset.del,1);libSet(a);libRender();setLibMsg("Deleted")}else{b.dataset.armed="1";b.textContent="Click again to delete"}}};
+libRender();
+$("libEditBox").onclick=null;
+function setLibMsg(t){const m=document.getElementById("libMsg");if(m)m.textContent=t}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#libEditBox button");if(!b)return;
+  if(b.dataset.cancel!=null){libEdit=-1;libRender();setLibMsg("Edit cancelled");return}
+  if(b.dataset.save!=null){const a=libGet(),x=a[libEdit],nm=document.getElementById("le-name"),tx=document.getElementById("le-nt");
+    if(!x||!nm||!tx){setLibMsg("Nothing to save: open a notation with Edit first");return}
+    x.name=nm.value.trim()||x.name;x.notation=tx.value;const ok=libSet(a);libEdit=-1;libRender();setLibMsg(ok?"Saved changes to “"+x.name+"”":"Could not save: this browser is blocking local storage")}});
+/* ---- Tālas: Adi and the seven sāpta tālas, chatusra jati. Each entry lists its angas as [type, aksharas]: L = laghu, D = dhrutam, A = anudhrutam ---- */
+const TALAS=[
+  {n:"Adi (chatusra triputa), 8 beats",a:[["L",4],["D",2],["D",2]]},
+  {n:"Dhruva, 14 beats",a:[["L",4],["D",2],["L",4],["L",4]]},
+  {n:"Matya, 10 beats",a:[["L",4],["D",2],["L",4]]},
+  {n:"Rupaka, 6 beats",a:[["D",2],["L",4]]},
+  {n:"Jhampa, 10 beats",a:[["L",7],["A",1],["D",2]]},
+  {n:"Triputa, 7 beats (tisra)",a:[["L",3],["D",2],["D",2]]},
+  {n:"Ata, 14 beats",a:[["L",5],["D",2],["L",5],["D",2]]},
+  {n:"Eka, 4 beats",a:[["L",4]]}];
+$("tal").innerHTML=TALAS.map((t,i)=>`<option value="${i}">${t.n.replace(/, \d+ beats/,"")}</option>`).join("");
+/* total beats follow your table: laghu = the chosen jati (3, 4, 5, 7 or 9), dhrutam = 2, anudhrutam = 1 */
+const TS=["LDD","LDLL","LDL","DL","LAD","LDD","LLDD","L"],JN={3:"Tisra",4:"Chatusra",5:"Khanda",7:"Misra",9:"Sankirna"};
+function talaRender(){const i=+$("tal").value||0,J=+$("gati").value,s=TS[i],cols=["#3b82f6","#f5c518","#3ecf5a","#e5484d"];let h="",k=1;
+  [...s].forEach((ty,gi)=>{const n=ty==="L"?J:ty==="D"?2:1;for(let j=0;j<n;j++){const sam=k===1,bd=j===0&&gi>0;
+    h+=`<div style="min-width:2.3rem;padding:.35rem .4rem;border-radius:8px;text-align:center;font-weight:600;font-size:.85rem;border:${bd?"2px":"1px"} solid ${bd?"var(--ink)":"var(--line)"};background:${sam?"var(--brass)":"color-mix(in srgb,"+cols[gi%4]+" 18%,transparent)"};color:${sam?"var(--bg)":"var(--ink)"}"><small style="display:block;font-size:.6rem;opacity:.75">${j===0?ty:""}</small>${sam?"+":k}</div>`;k++}});
+  $("talBeats").innerHTML=h;$("talInfo").textContent=`Total beats: ${k-1} (${TALAS[i].n.replace(/, \d+ beats/,"")}, ${JN[J]} jati)`;hmBuild()}
+/* hand gestures per anga: laghu = clap + finger counts, dhrutam = clap + wave, anudhrutam = clap */
+function hmBuild(){const i=+$("tal").value||0,J=+$("gati").value,P=[];
+  [...TS[i]].forEach(ty=>{P.push({t:"clap",ty,first:1});if(ty==="L")for(let k=1;k<J;k++)P.push({t:"finger",k,ty});if(ty==="D")P.push({t:"wave",ty})});
+  hmP=P;$("hmTala").textContent=TALAS[i].n.replace(/, \d+ beats/,"").replace(/ \(.*\)/,"");
+  $("hmDots").innerHTML=P.map(g=>`<span style="display:inline-block;margin-left:${g.first?6:0}px;width:${g.t==="finger"?7:10}px;height:${g.t==="finger"?7:10}px;border-radius:50%;box-sizing:border-box;transition:transform .15s,box-shadow .15s;background:${g.t==="clap"?"#ff7bb5":g.t==="wave"?"transparent":"#ffd2e6"};border:${g.t==="wave"?"2px solid #6fb8ff":"0"}"></span>`).join("");
+  hmLast=-2;hmApply(-1)}
+function hmApply(b){const g=b<0?null:hmP[b],n=$("hmNum"),r=$("hmRing"),col=!g?"#98aaa3":g.t==="clap"?"#ff7bb5":g.t==="finger"?"#ffd2e6":"#6fb8ff";
+  n.textContent=g?b+1:"\u2013";n.style.fill=col;r.style.stroke=col;r.style.strokeDashoffset=g?100-100*(b+1)/hmP.length:100;
+  n.style.animation="none";void n.getBoundingClientRect();n.style.animation=g?"hmPop .2s ease-out":"none";
+  $("hmLbl").textContent=!g?"Ready":g.t==="clap"?"Clap":g.t==="finger"?"Count "+g.k:"Wave";
+  [...$("hmDots").children].forEach((d,i)=>d.classList.toggle("cur",i===b));
+  $("hmBeat").textContent=(g?b+1:"\u2013")+" / "+hmP.length}
+function hmApplyOld(b){const top=$("hmTop"),g=b<0?null:hmP[b],fg=[...top.querySelectorAll(".fg")];
+  top.classList.remove("clap","finger","wave");void top.getBoundingClientRect();
+  fg.forEach(f=>f.classList.remove("on","open"));
+  if(!g){fg.forEach(f=>f.classList.add("open"));$("hmLbl").textContent="Ready"}
+  else if(g.t==="clap"){top.classList.add("clap");fg.forEach(f=>f.classList.add("open"));$("hmLbl").textContent="Clap"}
+  else if(g.t==="finger"){top.classList.add("finger");const n=((g.k-1)%4)+1;fg.forEach((f,i)=>f.classList.toggle("on",i>=4-n));$("hmLbl").textContent="Count "+g.k}
+  else{top.classList.add("wave");fg.forEach(f=>f.classList.add("open"));$("hmLbl").textContent="Wave"}
+  [...$("hmDots").children].forEach((d,i)=>d.classList.toggle("cur",i===b));
+  $("hmBeat").textContent=(b<0?"\u2013":b+1)+" / "+hmP.length}
+function talaRenderOld(){const t=TALAS[+$("tal").value]||TALAS[0],total=t.a.reduce((s,x)=>s+x[1],0),cols=["#3b82f6","#f5c518","#3ecf5a","#e5484d","#9a68f2","#f28c28","#16b8a6","#e0509f"];
+  let h="",k=1;
+  t.a.forEach(([ty,n],gi)=>{for(let j=0;j<n;j++){const sam=k===1,khali=false,bd=j===0&&gi>0;
+    h+=`<div title="${ty}${n}" style="min-width:2.3rem;padding:.35rem .4rem;border-radius:8px;text-align:center;font-weight:600;font-size:.85rem;border:${bd?"2px":"1px"} solid ${bd?"var(--ink)":"var(--line)"};background:${sam?"var(--brass)":"color-mix(in srgb,"+cols[gi%cols.length]+" 18%,transparent)"};color:${sam?"var(--bg)":"var(--ink)"}"><small style="display:block;font-size:.6rem;opacity:.75">${j===0?ty:""}</small>${sam?"+":k}</div>`;k++}});
+  {const g=+$("gati").value,gn={4:"Chatusra",3:"Tisra",5:"Khanda",7:"Misra",9:"Sankirna"}[g];$("talInfo").textContent=`Total beats: ${total*g} (${total} aksharas × ${g}, ${gn} nadai)`}
+  $("talBeats").innerHTML=h}
+$("tal").onchange=()=>{if($("tal").value==="0")$("gati").value="4";talaRender()};$("gati").addEventListener("change",talaRender);
+$("tal").value="0";talaRender();
+/* ---- notation grid: each avartanam is a row of beats, each beat holds 4 cells, and the beat count sets how many beats a row has ---- */
+var gridFlat,gridBusy=false,renderedRows=0;
+function gEsc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c])}
+function gTokens(t){return String(t).split(/\s+/).filter(x=>x&&x!=="|")}
+function gBeats(){return Math.max(1,Math.min(32,+$("bcount").value||8))}
+function gSerialize(){const B=gBeats(),per=B*4,f=gridFlat||[],rows=[];
+  for(let r=0;r<f.length;r+=per){const row=f.slice(r,r+per),beats=[];
+    for(let b=0;b<B;b++){const s=row.slice(b*4,b*4+4).filter(x=>x!=="").join(" ");if(s)beats.push(s)}
+    if(beats.length)rows.push(beats.join(" | "))}
+  return rows.join("\n")}
+function syncGridFromText(){gridFlat=gTokens($("nt").value);renderGrid()}
+function renderGrid(){if(!hasMarkers())return renderGridOld();
+  const B=gBeats(),per=B*4,t=$("nt").value.normalize("NFD"),LS=getLines(t),box=$("gridBox");renderedRows=0;let h="";
+  LS.forEach((L,li)=>{const tk=gTokens(t.slice(L.s,L.e)),rows=Math.max(1,Math.ceil(tk.length/per));
+    for(let r=0;r<rows;r++){h+=`<div style="display:flex;gap:6px;align-items:stretch;margin-bottom:${r===rows-1&&L.lyric?2:8}px"><div class="text-sm" style="writing-mode:vertical-rl;transform:rotate(180deg);color:var(--mute);min-width:1.6rem;text-align:center">${r?"":"Line "+(li+1)}</div>`;
+      for(let b=0;b<B;b++){h+=`<div style="border-left:1px solid var(--line);padding:0 4px;display:flex;flex-direction:column;gap:3px"><div class="text-xs" style="color:var(--mute);text-align:center">${b+1}</div><div style="display:flex;gap:2px">`;
+        for(let c=0;c<4;c++)h+=`<input readonly tabindex="-1" value="${gEsc(tk[r*per+b*4+c]||"")}" style="width:3.1rem;text-align:center;font-family:'Spectral',Georgia,serif;font-size:1rem;background:transparent;border:1px solid var(--line);border-radius:6px;padding:.2rem 0;color:var(--ink)">`;
+        h+=`</div></div>`}
+      h+=`</div>`}
+    if(L.lyric)h+=`<div class="text-sm" style="margin:0 0 8px 2rem;color:var(--mute)">${gEsc(L.lyric)}</div>`});
+  h+=`<p class="text-xs" style="color:var(--mute)">The cells follow your [SWARA] lines. To change them, edit the text box below.</p>`;
+  box.innerHTML=h}
+function renderGridOld(){const B=gBeats(),per=B*4,f=gridFlat||[],rows=Math.ceil((f.length+1)/per),box=$("gridBox");renderedRows=rows;
+  let h="";
+  for(let r=0;r<rows;r++){h+=`<div style="display:flex;gap:6px;align-items:stretch;margin-bottom:8px"><div class="text-sm" style="writing-mode:vertical-rl;transform:rotate(180deg);color:var(--mute);min-width:1.6rem;text-align:center">Av ${r+1}</div>`;
+    for(let b=0;b<B;b++){h+=`<div style="border-left:1px solid var(--line);padding:0 4px;display:flex;flex-direction:column;gap:3px"><div class="text-xs" style="color:var(--mute);text-align:center">${b+1}</div><div style="display:flex;gap:2px">`;
+      for(let c=0;c<4;c++){const i=r*per+b*4+c;h+=`<input data-i="${i}" value="${gEsc(f[i]||"")}" aria-label="Beat ${b+1}, cell ${c+1}" style="width:3.1rem;text-align:center;font-family:'Spectral',Georgia,serif;font-size:1rem;background:transparent;border:1px solid var(--line);border-radius:6px;padding:.2rem 0;color:var(--ink)">`}
+      h+=`</div></div>`}
+    h+=`</div>`}
+  box.innerHTML=h}
+$("gridBox").addEventListener("input",e=>{const t=e.target;if(!t.dataset||t.dataset.i===undefined)return;
+  const i=+t.dataset.i;gridFlat=gridFlat||[];while(gridFlat.length<=i)gridFlat.push("");gridFlat[i]=t.value.trim();
+  while(gridFlat.length&&gridFlat[gridFlat.length-1]==="")gridFlat.pop();
+  gridBusy=true;$("nt").value=gSerialize();load();gridBusy=false;
+  if(Math.ceil((gridFlat.length+1)/(gBeats()*4))!==renderedRows){renderGrid();const el=$("gridBox").querySelector(`[data-i="${i}"]`);if(el)el.focus()}});
+$("bcount").addEventListener("input",()=>{if(hasMarkers()){renderGrid();return}gridBusy=true;$("nt").value=gSerialize();load();gridBusy=false;renderGrid()});
+syncGridFromText();
+/* ---------- Importer ---------- */
+function csvToText(s){const rows=[];let row=[],cell="",q=false;
+  for(let i=0;i<=s.length;i++){const ch=s[i];
+    if(q){if(ch==='"'&&s[i+1]==='"'){cell+='"';i++}else if(ch==='"')q=false;else if(ch!==undefined)cell+=ch}
+    else if(ch==='"')q=true;else if(ch===","&&/^\s*\S/.test(cell+"x")&&false){}
+    else if(ch===","){row.push(cell);cell=""}
+    else if(ch==="\n"||ch===undefined){row.push(cell);rows.push(row.filter(c=>c.trim()!=="").join(" "));row=[];cell=""}
+    else if(ch!=="\r")cell+=ch}
+  return rows.filter(Boolean).join("\n")}
+function findRaga(v){const s=String(v).toLowerCase();
+  const m=MELA.findIndex((x,i)=>x.toLowerCase()===s||String(i+1)===s);if(m>=0)return"m:"+(m+1);
+  const j=JANYA.findIndex(x=>x[0].toLowerCase().startsWith(s));return j>=0?"j:"+j:null}
+$("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;const txt=await f.text();let notation=txt,msg=f.name;
+  try{
+    if(/\.json$/i.test(f.name)){const o=JSON.parse(txt);
+      if(Array.isArray(o))notation=o.join("\n");
+      else{notation=Array.isArray(o.notation)?o.notation.join("\n"):(o.notation||(o.phrases||o.lines||[]).join("\n"));
+        if(o.raga){const r=findRaga(o.raga);if(r)$("raga").value=r;else msg+=" (rāga not found)"}
+        if(o.tonic||o.sa)$("tonic").value=o.tonic||o.sa;if(o.bpm){$("bpm").value=o.bpm;$("bpmv").textContent=o.bpm;$("sBpmv").textContent=o.bpm}
+        if(o.kala){$("kala").value=o.kala;$("sKala").value=o.kala}if(o.gati)$("gati").value=o.gati}}
+    else if(/\.csv$/i.test(f.name))notation=csvToText(txt);
+    stop();$("nt").value=notation.trim();load();setStatus("Imported "+msg+" — "+queue.filter(x=>x.t==="n").length+" notes queued")
+  }catch(err){setStatus("Could not read file: "+err.message)}
+  e.target.value=""};
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "plugins/highway_3d"
+		}
+	],
+	"settings": {}
+}
