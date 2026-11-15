@@ -1,0 +1,12 @@
+{
+  "id": "carnatic_mandolin_lab",
+  "name": "Carnatic Mandolin Lab",
+  "version": "0.1.0",
+  "bundled": true,
+  "nav": { "label": "Mandolin Lab", "screen": "plugin-carnatic_mandolin_lab" },
+  "screen": "screen.html",
+  "script": "screen.js",
+  "scriptType": "module",
+  "category": "practice",
+  "description": "Raga swaras on the 5-string Carnatic mandolin fretboard, and practice exercises."
+}
