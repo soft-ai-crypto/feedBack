@@ -1,5 +1,13 @@
 <!-- Carnatic Mandolin Lab: the host injects this into div#plugin-carnatic_mandolin_lab.screen. Do not add an outer wrapper div with class="screen". -->
 <div id="cml-root" style="padding: 88px 24px 24px 24px;">
   <h2 class="text-xl font-semibold text-white">Carnatic Mandolin Lab</h2>
-  <p id="cml-status" class="text-gray-400 mt-2">Loading...</p>
+  <p class="text-gray-400 mt-1 mb-4">Pick a raga to see where its swaras fall on the 5 strings. Sa is the open third string (C#).</p>
+  <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+    <label for="cml-raga" class="text-gray-300">Raga</label>
+    <select id="cml-raga" style="background:#1f2937; color:#fff; border:1px solid #374151; border-radius:6px; padding:6px 10px; min-width:240px;"></select>
+  </div>
+  <p id="cml-scale" class="text-gray-300 mb-3"></p>
+  <div id="cml-board" style="overflow-x:auto;"></div>
+  <p class="text-gray-500 mt-3" style="font-size:12px;">Gold = Sa. A small dot above a swara = tara (upper octave). A small dot below = mandra (lower octave).</p>
+  <p id="cml-status" class="text-gray-400 mt-2"></p>
 </div>
