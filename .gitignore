@@ -68,3 +68,7 @@ Thumbs.db
 *.swp
 .idea/
 plugins/support_creators
+
+!plugins/maestro/
+!plugins/maestro/**
+plugins/maestro/__pycache__/

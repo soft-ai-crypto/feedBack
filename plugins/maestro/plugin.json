@@ -1,0 +1,24 @@
+{
+  "id": "maestro",
+  "name": "Maestro",
+  "version": "0.2.6",
+  "description": "Practice studio for guitar & bass — scale, technique, and rhythm drills, timed workouts, and jam backing that teach skills you take off the screen.",
+  "category": "practice",
+  "icon": "assets/thumb.png",
+  "license": "AGPL-3.0-only",
+  "nav": {
+    "label": "Maestro - Practice",
+    "screen": "maestro"
+  },
+  "fullscreen": true,
+  "screen": "screen.html",
+  "script": "screen.js",
+  "settings": {
+    "html": "settings.html",
+    "server_files": [
+      "plugin_data/maestro/presets.json",
+      "plugin_data/maestro/tunings.json"
+    ]
+  },
+  "routes": "routes.py"
+}
