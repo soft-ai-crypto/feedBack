@@ -20917,7 +20917,7 @@
     try {
       const o = JSON.parse(localStorage.getItem('maestro.instrument') || 'null');
       if (!o || !STRING_SETUPS[o.stringSetup]) return null;
-      return { stringSetup: o.stringSetup, customOpenMidis: (o.customOpenMidis || '').trim() };
+      return { stringSetup: o.stringSetup, customOpenMidis: '' };
     } catch (_) { return null; }
   }
   // The player's EFFECTIVE open midis per the L1 store (custom CSV when valid
@@ -20970,94 +20970,19 @@
   }
   function syncTuningOptions() {
     const sel = $('maestro-tuning-select'); if (!sel) return;
-    const family = currentFamily();
-    const count = currentStringCount();
-    const presets = TUNING_PRESETS[`${family}_${count}`] || [];
-    const setup = document.querySelector('[name="stringSetup"]');
-    const setupName = setup?.value || `${family}_${count}_standard`;
     const hidden = $('maestro-custom-open-midis');
-    const customStr = hidden?.value || '';
-    const customMidis = customStr ? customStr.split(',').map(Number).filter(Number.isFinite) : null;
+    if (hidden) hidden.value = '';
     sel.innerHTML = '';
-    // The "currently effective" tuning is the custom-override when present,
-    // otherwise the stringSetup's standard midis. Walk presets and pick the
-    // first one that matches — so e.g. switching to DADGAD via the dropdown
-    // (which is stored as customOpenMidis) keeps the dropdown showing
-    // "DADGAD" instead of "Custom".
-    const effective = (customMidis && customMidis.length === count)
-      ? customMidis
-      : ((STRING_SETUPS[setupName] || {}).openMidis || []);
-    let activeId = null;
-    // Built-in presets (Standard, Drop D, DADGAD, …). These keep their STABLE ids
-    // (`standard`, `d_standard`, …) — tests, stored prefs, and the L1 adapt paths
-    // key off them, so the host merge must never remove or rename them (deliberate
-    // deviation from the spec's "host name wins": id stability beats label
-    // provenance; the labels are near-identical anyway).
-    const presetGroup = document.createElement('optgroup');
-    presetGroup.label = 'Built-in';
-    for (const p of presets) {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.label;
-      opt.dataset.midis = p.midis.join(',');
-      presetGroup.appendChild(opt);
-      if (!activeId && effective.length === p.midis.length && effective.every((m, i) => m === p.midis[i])) {
-        activeId = p.id;
-      }
-    }
-    sel.appendChild(presetGroup);
-    // Host named tunings the curated set doesn't carry (topbar parity): the host
-    // tuning table is the fuller catalog (Drop A/Ab, Open E, …) — midis-duplicates
-    // of a built-in preset are skipped. Round-tripping to the host by NAME is
-    // unaffected by which option the user picks (hostTuningNameForMidis matches by
-    // resolved midis), as is the offset:true intent tag (applyTuningAdaptL1
-    // matches TUNING_PRESETS by midis).
-    const hostEntries = hostTuningEntries(family, count)
-      .filter(e => !presets.some(p => p.midis.length === e.midis.length && p.midis.every((m, i) => m === e.midis[i])));
-    if (hostEntries.length) {
-      const hostGroup = document.createElement('optgroup');
-      hostGroup.label = 'FeedBack';
-      for (const e of hostEntries) {
-        const opt = document.createElement('option');
-        opt.value = `host:${e.name}`;
-        opt.textContent = e.name;
-        opt.dataset.midis = e.midis.join(',');
-        hostGroup.appendChild(opt);
-        if (!activeId && effective.length === e.midis.length && effective.every((m, i) => m === e.midis[i])) {
-          activeId = `host:${e.name}`;
-        }
-      }
-      sel.appendChild(hostGroup);
-    }
-    // Saved tunings filtered to the current family + string count.
-    const mine = savedTunings.filter(t => t.family === family && t.string_count === count);
-    if (mine.length) {
-      const savedGroup = document.createElement('optgroup');
-      savedGroup.label = 'Saved';
-      for (const t of mine) {
-        const opt = document.createElement('option');
-        opt.value = `saved:${t.id}`;
-        opt.textContent = t.name;
-        opt.dataset.midis = (t.midis || []).join(',');
-        savedGroup.appendChild(opt);
-        if (!activeId && effective.length === (t.midis || []).length && (t.midis || []).every((m, i) => m === effective[i])) {
-          activeId = `saved:${t.id}`;
-        }
-      }
-      sel.appendChild(savedGroup);
-    }
-    // Always offer a Custom option. Picked when no preset matched and the
-    // user does have a non-empty custom override.
-    const customOpt = document.createElement('option');
-    customOpt.value = 'custom';
-    customOpt.textContent = 'Custom…';
-    sel.appendChild(customOpt);
-    if (!activeId && customMidis && customMidis.length === count) activeId = 'custom';
-    // Fallback = the first listed option (the host group may have absorbed the
-    // built-in Standard entry, so presets[0].id can be absent from the DOM).
-    sel.value = activeId || (sel.options[0] && sel.options[0].value) || 'custom';
-    syncCustomTuningInputs();
-    updateSetupButton();   // header Setup button shows the live instrument + tuning
+    const opt = document.createElement('option');
+    opt.value = 'standard';
+    opt.textContent = 'Standard';
+    opt.selected = true;
+    sel.appendChild(opt);
+    sel.value = 'standard';
+    try {
+      syncCustomTuningInputs();
+      updateSetupButton();   // header Setup button shows the live instrument + tuning
+    } catch (_) {}
   }
   // Persist the active custom tuning to the DB under a user-supplied name.
   // After save, refetch the saved-tunings list so the dropdown reflects the
@@ -26265,12 +26190,12 @@
       if (allowed) {
         if (setup) setup.value = inst.stringSetup;
         if (instrument) instrument.value = 'guitar';
-        const hidden = $('maestro-custom-open-midis');
-        if (hidden) hidden.value = inst.customOpenMidis || '';
       } else {
         if (instrument) instrument.value = 'guitar';
         if (setup) setup.value = 'carnatic_mandolin_5_standard';
       }
+      const hidden = $('maestro-custom-open-midis');
+      if (hidden) hidden.value = '';
     } catch (_) {}
     syncStringSetupControls();
     syncInstrumentClass();
