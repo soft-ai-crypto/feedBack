@@ -2190,7 +2190,7 @@
         <!-- Strings + tuning (moved from the rail). 4/5/6 for bass, 6/7/8 for guitar;
              tuning dropdown repopulated by syncTuningOptions(); custom-tuning row on "Custom…". -->
         <div class="maestro-tuning-block" id="maestro-tuning-block">
-          <div class="maestro-tuning-row">
+          <div class="maestro-tuning-row" hidden>
             <span class="maestro-tuning-label">Strings</span>
             <div class="maestro-string-count-row" id="maestro-string-count-row" role="group" aria-label="String count"><!-- syncStringCountChips() --></div>
           </div>
@@ -3017,21 +3017,14 @@
       <details class="maestro-advanced-card maestro-custom-only">
         <summary class="maestro-advanced-summary">Instrument &amp; tuning</summary>
         <div class="maestro-grid-2">
-          <label>Instrument family
+          <div hidden>
             <select name="instrument">
               <option value="guitar">Guitar</option>
-              <option value="bass">Bass</option>
             </select>
-          </label>
+          </div>
           <label>String setup
             <select name="stringSetup">
-              <option value="guitar_6_standard" selected>6-string guitar — standard</option>
-              <option value="guitar_6_drop_d">6-string guitar — Drop D</option>
-              <option value="guitar_7_standard">7-string guitar — standard</option>
-              <option value="guitar_8_standard">8-string guitar — standard</option>
-              <option value="bass_4_standard">4-string bass — standard</option>
-              <option value="bass_5_standard">5-string bass — standard low B</option>
-              <option value="bass_6_standard">6-string bass — standard (B-E-A-D-G-C)</option>
+              <option value="carnatic_mandolin_5_standard" selected>5-string Carnatic mandolin — standard (C#-G#-C#-G#-C#)</option>
             </select>
           </label>
         </div>

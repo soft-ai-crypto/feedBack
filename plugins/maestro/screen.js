@@ -91,6 +91,7 @@
     // never reads .tuning) but live in chart.tuning: a host round-trip through that
     // offset would detune string 0 a whole step. Fixed 2026-07-10 (guitar-pedagogy).
     guitar_8_standard: { label:'8-string guitar — standard', instrument:'guitar', openMidis:[30,35,40,45,50,55,59,64], tuning:[0,0,0,0,0,0,0,0] },
+    carnatic_mandolin_5_standard: { label:'5-string Carnatic mandolin — standard (C#-G#-C#-G#-C#)', instrument:'guitar', openMidis:[49,56,61,68,73], tuning:[0,0,0,0,0] },
     bass_4_standard: { label:'4-string bass — standard', instrument:'bass', openMidis:[28,33,38,43], tuning:[0,0,0,0] },
     bass_5_standard: { label:'5-string bass — standard low B', instrument:'bass', openMidis:[23,28,33,38,43], tuning:[0,0,0,0,0] },
     bass_6_standard: { label:'6-string bass — standard (B-E-A-D-G-C)', instrument:'bass', openMidis:[23,28,33,38,43,48], tuning:[0,0,0,0,0,0] }
@@ -141,6 +142,9 @@
       // Host-parity uniform standards (see the guitar_6 note).
       { id:'e_standard',   label:'E Standard (down 1 step)',    midis:[28,33,38,43,48,53,57,62], offset:true },
     ],
+    guitar_5: [
+      { id:'standard',     label:'Standard',                    midis:[49,56,61,68,73], offset:true },
+    ],
     bass_4: [
       { id:'standard',     label:'Standard (E A D G)',          midis:[28,33,38,43], offset:true },
       { id:'drop_d',       label:'Drop D (D A D G)',            midis:[26,33,38,43] },
@@ -164,6 +168,7 @@
     guitar_6_drop_d:   'guitar_6_drop_d',
     guitar_7_standard: 'guitar_7_standard',
     guitar_8_standard: 'guitar_8_standard',
+    guitar_5_standard: 'carnatic_mandolin_5_standard',
     bass_4_standard:   'bass_4_standard',
     bass_5_standard:   'bass_5_standard',
     bass_6_standard:   'bass_6_standard',
@@ -6275,7 +6280,7 @@
     // default — that's how per-string tunings (DADGAD, baritone, custom)
     // flow from the form into the generators.
     if (Array.isArray(cfg.customOpenMidis) && cfg.customOpenMidis.length) return cfg.customOpenMidis.slice();
-    return (STRING_SETUPS[cfg.stringSetup] || STRING_SETUPS.guitar_6_standard).openMidis.slice();
+    return (STRING_SETUPS[cfg.stringSetup] || STRING_SETUPS.carnatic_mandolin_5_standard).openMidis.slice();
   }
   function tuningOffsetsForConfig(cfg) {
     // When a custom tuning is in play, derive offsets from the difference
@@ -20930,41 +20935,23 @@
     return (el && el.value === 'bass') ? 'bass' : 'guitar';
   }
   function currentStringCount() {
-    const setup = document.querySelector('[name="stringSetup"]');
-    const cur = STRING_SETUPS[setup?.value] || STRING_SETUPS.guitar_6_standard;
-    return cur.openMidis.length;
+    return 5;
   }
   function syncStringCountChips() {
     const row = $('maestro-string-count-row'); if (!row) return;
-    const family = currentFamily();
-    const counts = family === 'bass' ? [4,5,6] : [6,7,8];
-    const cur = currentStringCount();
     row.innerHTML = '';
-    for (const n of counts) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'maestro-string-count-btn' + (n === cur ? ' active' : '');
-      b.dataset.count = String(n);
-      b.textContent = String(n);
-      b.addEventListener('click', () => onStringCountClick(n));
-      row.appendChild(b);
-    }
   }
   function onStringCountClick(count) {
-    // Snap stringSetup to the canonical standard preset for this family +
-    // count. If a custom tuning was active, it's dropped — the user explicitly
-    // chose a different number of strings, so the per-string state is stale.
-    const family = currentFamily();
-    const target = `${family}_${count}_standard`;
-    const setupName = TUNING_TO_SETUP[target] || (family === 'guitar' ? 'guitar_6_standard' : 'bass_4_standard');
+    const row = $('maestro-string-count-row'); if (!row) return;
     const setup = document.querySelector('[name="stringSetup"]');
     if (!setup) return;
+    const setupName = TUNING_TO_SETUP[`guitar_${count}_standard`] || 'carnatic_mandolin_5_standard';
+    if (!STRING_SETUPS[setupName]) return;
     setup.value = setupName;
-    // Clear any custom tuning.
     const hidden = $('maestro-custom-open-midis');
     if (hidden) hidden.value = '';
     setup.dispatchEvent(new Event('change', { bubbles: true }));
-    hostSettingsWriteSoon();  // the chip click is a real player declaration
+    hostSettingsWriteSoon();
     syncStringCountChips();
     syncTuningOptions();
   }
@@ -26203,7 +26190,7 @@
     }
     instrument?.addEventListener('change', (e) => {
       if (!setup) return;
-      setup.value = instrument.value === 'bass' ? 'bass_4_standard' : 'guitar_6_standard';
+      setup.value = 'carnatic_mandolin_5_standard';
       // A per-string custom tuning from the old family has the wrong string count /
       // ranges for the new one — clear it so the saved L1 store reflects the family
       // standard (mirrors onInstrumentFamilyClick).
@@ -26275,19 +26262,15 @@
     // legacy family-only key for stores written before Phase 1.
     try {
       const inst = instrumentStoreLoad();
-      if (inst) {
+      const allowed = inst && inst.stringSetup === 'carnatic_mandolin_5_standard';
+      if (allowed) {
         if (setup) setup.value = inst.stringSetup;
-        if (instrument) instrument.value = STRING_SETUPS[inst.stringSetup].instrument;
+        if (instrument) instrument.value = 'guitar';
         const hidden = $('maestro-custom-open-midis');
         if (hidden) hidden.value = inst.customOpenMidis || '';
       } else {
-        const saved = localStorage.getItem('maestro.instrumentFamily');
-        if (saved === 'bass' || saved === 'guitar') {
-          if (instrument && instrument.value !== saved) {
-            instrument.value = saved;
-            if (setup) setup.value = saved === 'bass' ? 'bass_4_standard' : 'guitar_6_standard';
-          }
-        }
+        if (instrument) instrument.value = 'guitar';
+        if (setup) setup.value = 'carnatic_mandolin_5_standard';
       }
     } catch (_) {}
     syncStringSetupControls();
