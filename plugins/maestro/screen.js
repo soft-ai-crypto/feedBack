@@ -18465,9 +18465,8 @@
     if (tun && tun.selectedOptions && tun.selectedOptions[0]) {
       tuning = tun.selectedOptions[0].textContent.replace(/\s*\(.*\)\s*/, '').trim();
     }
-    // Host-badge content hierarchy: instrument · strings · tuning (topbar parity).
-    const count = currentStringCount();
-    return tuning ? `${instr} · ${count} · ${tuning}` : `${instr} · ${count}`;
+    // Host-badge content hierarchy: instrument · tuning (topbar parity).
+    return tuning ? `${instr} · ${tuning}` : instr;
   }
   function updateSetupButton() {
     const lbl = $('maestro-setup-label');
