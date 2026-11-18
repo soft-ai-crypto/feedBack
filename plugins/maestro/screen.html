@@ -2135,7 +2135,7 @@
            masthead. Distinct from the per-MODE JTBD line (.maestro-mode-desc) lower
            in the Inspector: this is the PRODUCT identity, that is the active mode's.
            Dropped first in the narrow-width degrade order (see header media queries). -->
-      <p class="maestro-tagline" id="maestro-tagline">Practice studio for guitar &amp; bass — climb the <strong>Ladder</strong>, build a <strong>Workout</strong>, or <strong>Jam</strong> the changes.</p>
+      <p class="maestro-tagline" id="maestro-tagline">Practice studio for Carnatic mandolin — climb the <strong>Ladder</strong>, build a <strong>Workout</strong>, or <strong>Jam</strong> the changes.</p>
       <!-- renderer-status dropped from the meta (the view switcher already shows the
            active renderer — shell-IA de-dup). Kept as a hidden span so the JS that
            writes it (guarded) doesn't need changing. -->
@@ -2185,15 +2185,8 @@
          now the host-parity INSTRUMENT badge slot (host settings are the source of
          truth for guitar/bass — see the sync layer in screen.js). -->
     <div class="maestro-header-setup">
-      <button type="button" id="maestro-setup-btn" class="maestro-setup-btn" aria-haspopup="true" aria-expanded="false" title="Instrument, strings &amp; tuning"><span id="maestro-setup-label">Guitar · Standard</span> <span class="maestro-setup-caret">▾</span></button>
+      <button type="button" id="maestro-setup-btn" class="maestro-setup-btn" aria-haspopup="true" aria-expanded="false" title="Instrument, strings &amp; tuning"><span id="maestro-setup-label">Carnatic Mandolin · Standard</span> <span class="maestro-setup-caret">▾</span></button>
       <div id="maestro-setup-popover" class="maestro-setup-popover" hidden role="dialog" aria-label="Instrument setup">
-        <!-- Instrument family selector (moved from the rail). Drives the existing
-             [name="instrument"] field via syncInstrumentFamily(). -->
-        <div class="maestro-instrument-toggle" role="group" aria-label="Instrument">
-          <button type="button" class="maestro-instr-btn" data-instrument="bass">Bass</button>
-          <button type="button" class="maestro-instr-btn active" data-instrument="guitar">Guitar</button>
-          <button type="button" class="maestro-instr-btn" data-instrument="piano" disabled title="Piano support is coming in a future release">Piano</button>
-        </div>
         <!-- Strings + tuning (moved from the rail). 4/5/6 for bass, 6/7/8 for guitar;
              tuning dropdown repopulated by syncTuningOptions(); custom-tuning row on "Custom…". -->
         <div class="maestro-tuning-block" id="maestro-tuning-block">

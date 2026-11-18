@@ -18454,7 +18454,7 @@
   function setupLabelText() {
     const instrSel = document.querySelector('[name="instrument"]');
     const v = instrSel ? instrSel.value : 'guitar';
-    const instr = v === 'bass' ? 'Bass' : v === 'piano' ? 'Piano' : 'Guitar';
+    const instr = v === 'bass' ? 'Bass' : v === 'piano' ? 'Piano' : 'Carnatic Mandolin';
     const tun = $('maestro-tuning-select');
     let tuning = '';
     if (tun && tun.selectedOptions && tun.selectedOptions[0]) {
@@ -18471,7 +18471,7 @@
     // Short form for the narrow-width degrade (CSS swaps to data-short via ::after).
     const instrSel = document.querySelector('[name="instrument"]');
     const v = instrSel ? instrSel.value : 'guitar';
-    const short = v === 'bass' ? 'Bass' : v === 'piano' ? 'Pno' : 'Gtr';
+    const short = v === 'bass' ? 'Bass' : v === 'piano' ? 'Pno' : 'Mandolin';
     const tun = $('maestro-tuning-select');
     const tShort = (tun && tun.selectedOptions && tun.selectedOptions[0])
       ? tun.selectedOptions[0].textContent.replace(/\s*\(.*\)\s*/, '').trim().slice(0, 4) : '';
