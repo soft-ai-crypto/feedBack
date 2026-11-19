@@ -18652,6 +18652,7 @@
   // pathway repaint/regenerate behave exactly like a user change — _hostApplying
   // suppresses only the write-back echo.
   function applyHostInstrument(s) {
+    if (!s || s.instrument !== 'carnatic-mandolin') return; // never let host guitar/bass overwrite the mandolin setup
     const res = hostSettingsResolve(s);
     if (!res) return;
     if (hostStateMatchesPanel(res)) return;   // already showing it (breaks the react loop)
@@ -18684,7 +18685,7 @@
       const s = await r.json();
       if (!s || typeof s !== 'object') return null;
       _hostSettingsCache = s;
-      return (s.instrument === 'guitar' || s.instrument === 'bass') ? s : null;
+      return null; // Maestro is the Carnatic mandolin only: ignore host guitar/bass settings so they can never overwrite the mandolin setup
     } catch (_) { return null; /* older host / offline */ }
   }
   // Boot-time reconcile. Direction matters: while this plugin is resident it
