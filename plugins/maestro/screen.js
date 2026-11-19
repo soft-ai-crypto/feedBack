@@ -12781,7 +12781,7 @@
     }
     const bundle = {
       currentTime:0,
-      songInfo:{ title:exerciseTitle(cfg), artist:'Maestro', arrangement:cfg.instrument === 'bass' ? 'Bass' : 'Lead', tuning:tuningOffsetsForConfig(cfg), capo:0, duration:c.duration, format:'maestro-practice', fretboardSystem:cfg.fretboardSystem },
+      songInfo:{ title:exerciseTitle(cfg), artist:'Maestro', arrangement:cfg.instrument === 'bass' ? 'Bass' : 'Carnatic Mandolin', tuning:tuningOffsetsForConfig(cfg), capo:0, duration:c.duration, format:'maestro-practice', fretboardSystem:cfg.fretboardSystem },
       config:cfg,
       // Finite-run eligibility (Depth Ladder slice 1): a run with a real mode
       // (Pathways/Custom AND a Workout session) plays its tiled length ONCE then
