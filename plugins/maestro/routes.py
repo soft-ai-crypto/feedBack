@@ -789,12 +789,12 @@ def setup(app: FastAPI, context: dict) -> None:
 
     @app.get(f"/api/plugins/{PLUGIN_ID}/sample/{{name}}")
     def sample_asset(name: str):
-        if not name.endswith(".ogg") or "/" in name or "\\" in name or ".." in name:
+        if not name.endswith((".ogg", ".wav")) or "/" in name or "\\" in name or ".." in name:
             raise HTTPException(404, "Not found.")
         path = _samples_dir / name
         if not path.is_file():
             raise HTTPException(404, "Not found.")
-        return FileResponse(str(path), media_type="audio/ogg")
+        return FileResponse(str(path), media_type="audio/wav" if name.endswith(".wav") else "audio/ogg")
 
     # Self-hosted display faces for the results-card themes (settings → Card style).
     # Neon reuses Orbitron (also inlined for the wordmark); Esports = Rajdhani;
