@@ -8757,6 +8757,41 @@
       tom_low:   '...........n',
     } },
   };
+
+  // Indian percussion patterns, one entry per drum kit id (tabla now; mridangam etc. later).
+  // DATA ONLY, not used by any code yet.
+  // A bar is 4 beats. A beat is a string of strokes split evenly across the beat; '.' is a rest.
+  // fills[n] is the list of alternative fills that are n bars long; each fill is a list of bars.
+  const INDIAN_PERC_PATTERNS = {
+    kit_tabla: {
+      teental: {
+        beatsPerBar: 4,
+        theka: [
+          ['dha', 'dhin', 'dhin', 'dha'],
+          ['dha', 'dhin', 'dhin', 'dha'],
+          ['dha', 'tin', 'tin', 'ta'],
+          ['ta', 'dhin', 'dhin', 'dha'],
+        ],
+        fills: {
+          1: [
+            [['dha ge ti ke', 'dha ge ti ke', 'dha ge na ge', 'dhin . . dha']],
+            [['ta ke dhin na', 'ta ke dhin na', 'dha . dha ge', 'ti ke dhin dha']],
+            [['dha . dha .', 'dha . dha .', 'dha ge dha ge', 'dha . . .']],
+          ],
+          2: [
+            [
+              ['dhin . dhin .', 'dha . dha .', 'dhin . dhin .', 'dha . dha .'],
+              ['dha ge ti ke', 'dha ge ti ke', 'dha ge na ge', 'dhin . . dha'],
+            ],
+            [
+              ['dha . ge na', 'dha . ge na', 'dha ge ti ke', 'dha ge ti ke'],
+              ['ta ke dhin na', 'ta ke dhin na', 'dha . dha ge', 'ti ke dhin dha'],
+            ],
+          ],
+        },
+      },
+    },
+  };
   // The audio profile lives at cfg.audio.profile on the readConfig path but at a
   // top-level cfg.audioProfile on palette/pathway/session partials — read both.
   function cfgAudioProfile(cfg) { return cfg.audioProfile || (cfg.audio && cfg.audio.profile) || ''; }
