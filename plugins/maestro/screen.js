@@ -6525,6 +6525,14 @@
     return null;
   }
   function measureSeconds(cfg) { return (60 / cfg.bpm) * (4 / cfg.meter.denominator) * cfg.meter.numerator; }
+  // Display-only bar number: count-in bars (the first config.countInBars downbeats) show no
+  // number and the first content bar reads 1. b.measure itself is NOT changed.
+  function contentMeasureNo(bundle, b) {
+    if (!b || (b.measure ?? -1) < 0) return null;
+    const ci = (bundle && bundle.config && bundle.config.countInBars) || 0;
+    const m = b.measure - ci;
+    return m > 0 ? m : null;
+  }
   // Seconds per metric beat (the meter's denominator unit) for a rendered
   // bundle. Used to size the Tab/Notation view window in beats rather than
   // fixed seconds, so note density stays comfortable across tempos.
@@ -13048,9 +13056,12 @@
         ctx.lineWidth = b.measure >= 0 ? 1.4 : 1;
         ctx.beginPath(); ctx.moveTo(x, TOP_PAD - 24); ctx.lineTo(x, H - BOTTOM_PAD + 6); ctx.stroke();
         if (b.measure >= 0) {
-          ctx.fillStyle = '#93c5fd';
-          ctx.font = '11px system-ui';
-          ctx.fillText(String(b.measure), x + 4, TOP_PAD - 30);
+          const mNo = contentMeasureNo(bundle, b);
+          if (mNo != null) {
+            ctx.fillStyle = '#93c5fd';
+            ctx.font = '11px system-ui';
+            ctx.fillText(String(mNo), x + 4, TOP_PAD - 30);
+          }
         }
       }
       const playX = xForDt(0);
@@ -13589,7 +13600,8 @@
         if (b.measure >= 0) {
           ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, yTop); ctx.lineTo(x, yBot); ctx.stroke();
           ctx.font = '10px "Cambria","Georgia",serif';
-          ctx.fillText(String(b.measure), x + 3, yTop - 6);
+          const mNo = contentMeasureNo(bundle, b);
+          if (mNo != null) ctx.fillText(String(mNo), x + 3, yTop - 6);
         }
       }
     }
@@ -14051,7 +14063,7 @@
         const x = xForDt(dt) - BAR_LEAD;
         ctx.strokeStyle = t.ink; ctx.lineWidth = 1.2;
         ctx.beginPath(); ctx.moveTo(x, staffTop); ctx.lineTo(x, bottomY); ctx.stroke();
-        ctx.fillStyle = t.dim; ctx.font = '10px "Cambria","Georgia",serif'; ctx.fillText(String(b.measure), x+3, staffTop-4);
+        { const mNo = contentMeasureNo(bundle, b); if (mNo != null) { ctx.fillStyle = t.dim; ctx.font = '10px "Cambria","Georgia",serif'; ctx.fillText(String(mNo), x+3, staffTop-4); } }
       }
     }
 
@@ -15366,7 +15378,7 @@
       if (isBar) {
         ctx.strokeStyle = 'rgba(96,165,250,0.45)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(x, lz); ctx.lineTo(x, H); ctx.stroke();
-        ctx.fillStyle = '#8aa0bd'; ctx.fillText(String(cycN > 0 ? ((((b.measure - 1) % cycN) + cycN) % cycN) + 1 : b.measure), x + 3, lz + 2);
+        { const mNo = contentMeasureNo(activeBundle, b); if (mNo != null) { ctx.fillStyle = '#8aa0bd'; ctx.fillText(String(cycN > 0 ? ((((mNo - 1) % cycN) + cycN) % cycN) + 1 : mNo), x + 3, lz + 2); } }
       } else {
         const grp = b.accent === 'group';
         ctx.strokeStyle = grp ? 'rgba(148,163,184,0.3)' : 'rgba(148,163,184,0.15)';
@@ -20608,10 +20620,10 @@
     let measure = null, beatInBar = 0;
     for (const b of beats) {
       if (b.time > t + 1e-3) break;
-      if ((b.measure ?? -1) >= 0) { measure = b.measure; beatInBar = 1; }
+      if ((b.measure ?? -1) >= 0) { measure = b.measure - ((activeBundle && activeBundle.config && activeBundle.config.countInBars) || 0); beatInBar = 1; }
       else if (measure != null) beatInBar++;
     }
-    return measure == null ? null : measure + '.' + beatInBar;
+    return (measure == null || measure <= 0) ? null : measure + '.' + beatInBar;
   }
   // DAW-style cycle readout: "5.1–8.4 · 3 bars" (bar.beat bounds + bar span), or
   // a seconds fallback when there's no bar grid. null when no loop is set.
