@@ -5926,7 +5926,7 @@
   function prewarmVoices(bundle) {
     resolveVoiceGms(bundle || activeBundle).forEach(gm => ensureWafPreset(gm));
     const dk = activeSampleDrumKit(bundle || activeBundle);
-    if (dk) DRUM_CORE_PIECES.forEach(p => ensureDrumPiece(dk, p));   // preload the groove staples (Phase D4)
+    if (dk) drumPrewarmPieces(dk).forEach(p => ensureDrumPiece(dk, p));   // preload the groove staples (Phase D4)
     sgPrewarm(bundle || activeBundle);                               // sampled-guitar buffers (lazy, cached)
   }
   // The active sample-engine drum kit for this bundle (or null: synth kit / drums off).
@@ -5936,6 +5936,13 @@
     if (!audio || !audio.harmony || audio.drums === false) return null;
     const kit = resolveDrumKit(resolveAudioProfile({ ...cfg, audio }));
     return (kit && kit.engine === 'sample' && kit.pieces) ? kit : null;
+  }
+
+  // Pieces to preload for a sampled drum kit: the western staples, or every stroke of an
+  // Indian percussion kit (tabla etc.), whose strokes are not in DRUM_CORE_PIECES.
+  function drumPrewarmPieces(kit) {
+    const bank = kit && INDIAN_PERC_PATTERNS[kit.id] && kit.bank && DRUMKIT_BANKS[kit.bank];
+    return bank ? Object.keys(bank.src) : DRUM_CORE_PIECES;
   }
   function ensureDrumPiece(kit, piece) {
     // REAL sampled kit: prewarm every round-robin take of this piece (buffer player).
@@ -5956,7 +5963,7 @@
   async function awaitVoices(bundle, capMs) {
     const gms = resolveVoiceGms(bundle || activeBundle);
     const dk = activeSampleDrumKit(bundle || activeBundle);
-    const drumPromises = dk ? DRUM_CORE_PIECES.map(p => ensureDrumPiece(dk, p)) : [];
+    const drumPromises = dk ? drumPrewarmPieces(dk).map(p => ensureDrumPiece(dk, p)) : [];
     const sgPromises = sgPrewarm(bundle || activeBundle);
     if (!gms.length && !drumPromises.length && !sgPromises.length) return;
     let timer; const cap = new Promise(r => { timer = setTimeout(r, capMs || 2000); });
@@ -9102,6 +9109,11 @@
   function buildDrumEvents(cfg, duration, grooveId) {
     if (!(duration > 0)) return [];
     if (grooveId == null || grooveId === 'none') return [];   // deliberately drumless
+    // Indian percussion kit selected (e.g. Tabla): build its own cycle instead of a western groove.
+    const indianKitId = resolveDrumKit(resolveAudioProfile(cfg)).id;
+    if (INDIAN_PERC_PATTERNS[indianKitId] && cfg.meter.numerator === 4 && cfg.meter.denominator === 4) {
+      return buildIndianPercEvents(cfg, duration, indianKitId);
+    }
     const groove = DRUM_GROOVES[grooveId];
     const numer = Math.max(1, cfg.meter.numerator), denom = cfg.meter.denominator;
     const baseDiv = groove ? Math.max(1, groove.div) : 2;
@@ -9166,6 +9178,74 @@
       }
     }
     return chokeOpenHats(humanizeDrums(events, cfg));
+  }
+
+  // Tabla/Indian percussion backing: builds Teental (4 bars of 4/4) from INDIAN_PERC_PATTERNS
+  // for the active drum kit, with seeded random fills.
+  // Optional settings on cfg (defaults used when absent):
+  //   cfg.indianFillEvery = bars between fills (default 16, rounded up to whole 4-bar cycles)
+  //   cfg.indianFillBars  = fill length in bars (default 1; uses the longest available fill up to this)
+  function buildIndianPercEvents(cfg, duration, kitId) {
+    const pat = INDIAN_PERC_PATTERNS[kitId] && INDIAN_PERC_PATTERNS[kitId].teental;
+    if (!pat || !(duration > 0)) return [];
+    const beatSec = (60 / cfg.bpm) * (4 / cfg.meter.denominator);
+    const barSec = pat.beatsPerBar * beatSec;
+    const cycleBars = pat.theka.length;
+    const events = [];
+    const mkEv = (voice, t, velocity, accent) => {
+      if (t >= duration - 1e-4) return;
+      events.push({ t: +t.toFixed(6), end: +(t + 0.1).toFixed(6), role: 'drums', voice,
+        velocity: Math.min(1, velocity), accent: !!accent, ghost: false, noSwing: true });
+    };
+    // One beat string such as 'dha ge ti ke': strokes spread evenly across the beat; '.' is a rest.
+    const emitBeat = (beatStart, beatStr, isSam) => {
+      const toks = String(beatStr).split(/\s+/).filter(Boolean);
+      const stepSec = beatSec / Math.max(1, toks.length);
+      toks.forEach((tok, i) => {
+        if (tok === '.') return;
+        const sam = isSam && i === 0;
+        mkEv(tok, beatStart + i * stepSec, sam ? DRUM_VELOCITY.a : DRUM_VELOCITY.n, sam);
+      });
+    };
+    const emitBar = (barStart, beats, barInCycle) => {
+      beats.forEach((b, i) => emitBeat(barStart + i * beatSec, b, barInCycle === 0 && i === 0));
+    };
+
+    // Fill settings
+    const reqEvery = Math.max(cycleBars, Math.round(Number(cfg.indianFillEvery) || 16));
+    const everyBars = Math.ceil(reqEvery / cycleBars) * cycleBars;
+    const lens = Object.keys(pat.fills).map(Number).sort((a, b) => a - b);
+    const wantLen = Math.max(1, Math.round(Number(cfg.indianFillBars) || 1));
+    const fillLen = lens.filter(n => n <= wantLen).pop() || lens[0];
+    const fillList = (pat.fills[fillLen] || []);
+    const rng = mulberry32((resolveHumanSeed(cfg) ^ 0x5441424c) >>> 0);
+
+    // One fill per block of everyBars bars, on the last bar(s) of one cycle in the block:
+    // usually the block's last cycle, sometimes one cycle earlier (seeded random).
+    const totalBars = Math.ceil(duration / barSec - 1e-6);
+    const fillAt = new Map();
+    if (fillList.length && lens.length) {
+      for (let blockStart = 0; blockStart < totalBars; blockStart += everyBars) {
+        const cyclesInBlock = everyBars / cycleBars;
+        let cyc = cyclesInBlock - 1;
+        if (cyclesInBlock > 1 && rng() < 0.3) cyc -= 1;
+        const startBar = blockStart + cyc * cycleBars + (cycleBars - fillLen);
+        fillAt.set(startBar, fillList[Math.floor(rng() * fillList.length) % fillList.length]);
+      }
+    }
+
+    for (let bar = 0; bar < totalBars; bar++) {
+      const bs = bar * barSec;
+      const inCycle = bar % cycleBars;
+      const fill = fillAt.get(bar);
+      if (fill) {
+        fill.forEach((beats, k) => emitBar(bs + k * barSec, beats, (inCycle + k) % cycleBars));
+        bar += fill.length - 1;   // the fill covers these bars
+      } else {
+        emitBar(bs, pat.theka[inCycle], inCycle);
+      }
+    }
+    return humanizeDrums(events, cfg);
   }
   // Meter-agnostic generic time-keep for any meter the authored cells don't cover.
   // Kick on the group-starts (the felt pulse — 7/8 = 2+2+3 kicks at beats 0,2), snare
