@@ -6529,6 +6529,7 @@
   // number and the first content bar reads 1. b.measure itself is NOT changed.
   function contentMeasureNo(bundle, b) {
     if (!b || (b.measure ?? -1) < 0) return null;
+    if (b.brk) return null;
     const ci = (bundle && bundle.config && bundle.config.countInBars) || 0;
     const m = b.measure - ci;
     return m > 0 ? m : null;
@@ -9236,7 +9237,11 @@
     const fillAt = new Map();
     if (fillList.length && lens.length) {
       for (let blockStart = 0; blockStart < totalBars; blockStart += everyBars) {
-        const cyclesInBlock = everyBars / cycleBars;
+        // A block cut short by the end of the drill only counts its whole cycles,
+        // so the fill always lands inside the drill.
+        const blockLen = Math.min(everyBars, totalBars - blockStart);
+        const cyclesInBlock = Math.floor(blockLen / cycleBars);
+        if (cyclesInBlock < 1) continue;
         let cyc = cyclesInBlock - 1;
         if (cyclesInBlock > 1 && rng() < 0.3) cyc -= 1;
         const startBar = blockStart + cyc * cycleBars + (cycleBars - fillLen);
