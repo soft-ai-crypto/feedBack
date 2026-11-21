@@ -4513,6 +4513,7 @@
       bars: Math.max(1, Math.min(32, parseInt(data.get('bars') || '4', 10))),
       indianFillEvery: (() => { const n = parseInt(data.get('indianFillEvery'), 10); return Number.isFinite(n) && n >= 1 ? n : 16; })(),
       indianFillBars: (() => { const n = parseInt(data.get('indianFillBars'), 10); return Number.isFinite(n) && n >= 1 ? n : 1; })(),
+      indianTala: String(data.get('indianTala') || 'teental'),
       chordDepth: advancedMode ? (data.get('chordDepth') || 'triad') : 'triad',
       tritoneSub: advancedMode ? (data.get('tritoneSub') || 'off') : 'off',
       progression: practiceType === 'guide_tones'
@@ -8808,6 +8809,20 @@
           ],
         },
       },
+      adi: {
+        beatsPerBar: 4,
+        theka: [
+          ['dha', 'dhin', 'dhin', 'dha'],
+          ['dha', 'tin', 'tin', 'ta'],
+        ],
+        fills: {
+          1: [
+            [['dha ge ti ke', 'dha ge ti ke', 'dha ge na ge', 'dhin . . dha']],
+            [['ta ke dhin na', 'ta ke dhin na', 'dha . dha ge', 'ti ke dhin dha']],
+            [['dha . dha .', 'dha . dha .', 'dha ge dha ge', 'dha . . .']],
+          ],
+        },
+      },
     },
   };
   // The audio profile lives at cfg.audio.profile on the readConfig path but at a
@@ -9197,7 +9212,8 @@
   //   cfg.indianFillEvery = bars between fills (default 16, rounded up to whole 4-bar cycles)
   //   cfg.indianFillBars  = fill length in bars (default 1; uses the longest available fill up to this)
   function buildIndianPercEvents(cfg, duration, kitId) {
-    const pat = INDIAN_PERC_PATTERNS[kitId] && INDIAN_PERC_PATTERNS[kitId].teental;
+    const kitPats = INDIAN_PERC_PATTERNS[kitId];
+    const pat = kitPats && (kitPats[cfg.indianTala] || kitPats.teental);
     if (!pat || !(duration > 0)) return [];
     const beatSec = (60 / cfg.bpm) * (4 / cfg.meter.denominator);
     const barSec = pat.beatsPerBar * beatSec;
@@ -25986,6 +26002,7 @@
     const tablaFill = {
       indianFillEvery: Number.isFinite(tablaFillEveryRaw) && tablaFillEveryRaw >= 1 ? tablaFillEveryRaw : 16,
       indianFillBars: Number.isFinite(tablaFillBarsRaw) && tablaFillBarsRaw >= 1 ? tablaFillBarsRaw : 1,
+      indianTala: document.querySelector('[name="indianTala"]')?.value || 'teental',
     };
     // Launch the editable working DRAFT (refreshed/edited) — materialize any template-ref
     // slots, then patch audio + (family-compatible) string setup into each concrete config.
@@ -26603,7 +26620,7 @@
     });
     // Tabla fill boxes (Fill every / Fill length) are form-associated like the practice pills,
     // so their change events also do NOT reach the #maestro-controls listener: wire them directly.
-    document.querySelectorAll('.maestro-tabla-fill input').forEach(inp => {
+    document.querySelectorAll('.maestro-tabla-fill input, .maestro-tabla-fill select').forEach(inp => {
       inp.addEventListener('change', () => { writeShareHash(); if (activeBundle) onGenerate(); });
     });
     // View dropdown in the render stage — independent of exercise mode

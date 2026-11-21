@@ -1278,6 +1278,8 @@
   }
   .maestro-fill-pill input { width: 3.2em; padding: 2px 4px; font: inherit; color: inherit; background: transparent; border: 1px solid var(--vir-text-faint); border-radius: 6px; }
   .maestro-fill-pill input:focus-visible { outline: 2px solid var(--vir-accent); outline-offset: 2px; }
+  .maestro-fill-pill select { padding: 2px 4px; font: inherit; color: var(--vir-text, #e2e8f0); background: var(--vir-inset, #0b1220); border: 1px solid var(--vir-text-faint); border-radius: 6px; cursor: pointer; }
+  .maestro-fill-pill select:focus-visible { outline: 2px solid var(--vir-accent); outline-offset: 2px; }
   .maestro-hotkey-bar { display: flex; gap: 4px; }
   .maestro-hk-btn { padding: 4px 10px; font-size: 11.5px; font-weight: 600; border-radius: 7px; border: 1px solid var(--vir-border, #334155); background: var(--vir-inset, #0b1220); color: var(--vir-text-dim, #94a3b8); cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s; }
   .maestro-hk-btn:hover { background: #1e293b; color: #e2e8f0; }
@@ -3386,6 +3388,13 @@
           </label>
         </div>
         <div class="maestro-practice-toggles maestro-tabla-fill" role="group" aria-label="Tabla fill">
+          <label class="maestro-fill-pill" title="Tabla tala (rhythm cycle)">
+            <span>Tala</span>
+            <select form="maestro-controls" name="indianTala">
+              <option value="teental">Teental (16)</option>
+              <option value="adi">Adi (8)</option>
+            </select>
+          </label>
           <label class="maestro-fill-pill" title="Tabla fill: how often, in bars (rounded up to whole taal cycles)">
             <span>Fill every</span>
             <input type="number" form="maestro-controls" name="indianFillEvery" value="16" style="width:3.2em">
