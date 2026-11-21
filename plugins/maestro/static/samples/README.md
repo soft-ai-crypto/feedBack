@@ -213,3 +213,16 @@ drum pieces → a source token (the 4 tom slots alias the 2 harvested toms); dro
 synth 808/909 voice (degraded-but-audible, never silent). By-ear tunable: the snare's
 medium-hard velocity-layer pick (vl11–13 of 16), the per-piece gain re-balance vs the synth
 failover, and a future ghost-snare 2nd layer (a genuinely soft-struck sample, not gained-down).
+
+## Naad tabla bols (`tb_*.wav`) — MIT
+
+Tabla bols from the **Naad** project by **Oormi Creations**, obtained from
+`github.com/oormicreations/naad` (folder `Bol`). Licensed **MIT**, copyright Oormi
+Creations and Contributors. The licence text is kept next to the sounds in
+`NAAD-LICENSE.txt`. The licence notice must stay with these files.
+
+112 takes named `tb_<stroke>_<n>.wav`, numbered from 1 with no gaps. Strokes and
+takes: dha 8, dhin 7, dhit 5, dhun 6, ga 11, ge 13, ke 11, na 11, ta 10, ti 10,
+tin 10, tun 10. Files renamed; exact duplicate takes in the source folders (14
+files) were left out; no audio was edited. Used by `kit_tabla`
+(`DRUMKIT_BANKS.tabla` in `screen.js`).

@@ -4761,6 +4761,11 @@
       rr: { kick:3, snare:3, xstick:2, hhclosed:4, hhopen:2, hhpedal:2, ride:3, crash:2, htom:2, ltom:2 },
       file: (token, n) => `dk_${token}_${n}.ogg`,
     },
+    tabla: {
+      src: { dha:'dha', dhin:'dhin', dhit:'dhit', dhun:'dhun', ga:'ga', ge:'ge', ke:'ke', na:'na', ta:'ta', ti:'ti', tin:'tin', tun:'tun' },
+      rr: { dha:8, dhin:7, dhit:5, dhun:6, ga:11, ge:13, ke:11, na:11, ta:10, ti:10, tin:10, tun:10 },
+      file: (token, n) => `tb_${token}_${n}.wav`,
+    },
   };
   const KIT_REGISTRY = {
     kit_909: { engine: 'synth', preset: '909' },   // tight/punchy default electronic
@@ -4770,6 +4775,7 @@
     kit_rock:          { engine: 'sample', bank: 'virtuosity', font: 'FluidR3_GM', variant: 0, level: 1.0,  pieces: ACOUSTIC_PIECES },
     kit_acoustic_soft: { engine: 'sample', bank: 'virtuosity', font: 'FluidR3_GM', variant: 0, level: 0.82, pieces: ACOUSTIC_PIECES },
     kit_jazz:          { engine: 'sample', bank: 'virtuosity', font: 'FluidR3_GM', variant: 0, level: 0.8,  pieces: ACOUSTIC_PIECES },  // brush sample set = later curation
+    kit_tabla: { engine: 'sample', bank: 'tabla', variant: 0, level: 1.0, pieces: {} },  // Naad tabla samples, MIT, see static/samples/NAAD-LICENSE.txt
     // kit_latin / kit_afro (percussion-led) → Phase D6
   };
   // Startup integrity (mirrors the no-unison / palette guards): every kit `bank` must
@@ -16495,7 +16501,7 @@
   };
   // Per-channel kit options for the Drums channel (Phase D). Values are KIT_REGISTRY
   // ids; '' = Auto (use the style profile's kit). Sampled kits join in D4.
-  const MIXER_KITS = [['','Auto'],['kit_rock','Acoustic rock'],['kit_acoustic_soft','Acoustic soft'],['kit_jazz','Jazz kit'],['kit_909','Synth 909'],['kit_808','Synth 808']];
+  const MIXER_KITS = [['','Auto'],['kit_rock','Acoustic rock'],['kit_acoustic_soft','Acoustic soft'],['kit_jazz','Jazz kit'],['kit_909','Synth 909'],['kit_808','Synth 808'],['kit_tabla','Tabla']];
   const mixerState = {};
   let mixerBackingDim = false;
   let mixerMasterLevel = 1;   // multiplier over MASTER_TRIM (the headroom trim stays the engine's)
@@ -21407,7 +21413,7 @@
   // not "Auto". A distorted/overdriven amp re-labels the guitar/bass.
   const BAND_TONE_LABEL = { piano: 'Piano', epiano: 'Rhodes', clav: 'Clavinet', organ: 'Organ', nylon: 'Nylon guitar', guitar: 'Acoustic guitar', clean: 'Electric guitar', upright: 'Upright bass', bass: 'Electric bass', strings: 'Strings', brass: 'Brass', synthlead: 'Synth lead', synthpad: 'Synth pad', pad: 'Pad', steel: 'Pedal Steel',
     sawpad: 'Saw pad', polybrass: 'Synth brass', neonlead: 'Neon lead', pwmpad: 'PWM pad', fmep: 'FM e-piano', pluck: 'Synth pluck', synthbass: 'Synth bass' };
-  const BAND_KIT_LABEL = { kit_rock: 'Rock kit', kit_acoustic_soft: 'Soft kit', kit_jazz: 'Jazz kit', kit_909: 'Synth kit (909)', kit_808: 'Synth kit (808)' };
+  const BAND_KIT_LABEL = { kit_rock: 'Rock kit', kit_acoustic_soft: 'Soft kit', kit_jazz: 'Jazz kit', kit_909: 'Synth kit (909)', kit_808: 'Synth kit (808)', kit_tabla: 'Tabla' };
   function bandVoiceLabel(slot, role) {
     if (!slot) return '—';
     if (role === 'bass') return slot.amp === 'bass_drive' ? 'Overdriven bass' : (BAND_TONE_LABEL[slot.tone] || 'Bass');
