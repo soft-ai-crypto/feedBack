@@ -4511,6 +4511,8 @@
       fretMin,
       fretMax,
       bars: Math.max(1, Math.min(32, parseInt(data.get('bars') || '4', 10))),
+      indianFillEvery: (() => { const n = parseInt(data.get('indianFillEvery'), 10); return Number.isFinite(n) && n >= 1 ? n : 16; })(),
+      indianFillBars: (() => { const n = parseInt(data.get('indianFillBars'), 10); return Number.isFinite(n) && n >= 1 ? n : 1; })(),
       chordDepth: advancedMode ? (data.get('chordDepth') || 'triad') : 'triad',
       tritoneSub: advancedMode ? (data.get('tritoneSub') || 'off') : 'off',
       progression: practiceType === 'guide_tones'
@@ -25960,6 +25962,14 @@
     // (a bass tuning must never land on a guitar session); the form value is already
     // applyTuningAdaptL1-resolved, buildSegmentConfig length-guards it per-segment.
     const formCustomOpenMidis = inheritForm ? (document.querySelector('#maestro-controls [name="customOpenMidis"]')?.value || '').trim() : '';
+    // Tabla fill settings live in always-visible boxes outside #maestro-controls (form= attribute),
+    // so read them by name, like formStringSetup above. Same fallbacks as readConfig (16 and 1).
+    const tablaFillEveryRaw = parseInt(document.querySelector('[name="indianFillEvery"]')?.value, 10);
+    const tablaFillBarsRaw = parseInt(document.querySelector('[name="indianFillBars"]')?.value, 10);
+    const tablaFill = {
+      indianFillEvery: Number.isFinite(tablaFillEveryRaw) && tablaFillEveryRaw >= 1 ? tablaFillEveryRaw : 16,
+      indianFillBars: Number.isFinite(tablaFillBarsRaw) && tablaFillBarsRaw >= 1 ? tablaFillBarsRaw : 1,
+    };
     // Launch the editable working DRAFT (refreshed/edited) — materialize any template-ref
     // slots, then patch audio + (family-compatible) string setup into each concrete config.
     // Falls back to a fresh clone if the draft is missing/stale for the selected session.
@@ -25972,7 +25982,7 @@
       ...(inheritForm && formCustomOpenMidis ? { customOpenMidis: formCustomOpenMidis } : {}),
       countInBars: countInDefaultBars(),   // a Workout gets the player's count-in default (≥1) at block 1 — was dropped (slammed in cold)
       segments: (draft.segments || []).map(materializeSegment).filter(Boolean).map(seg =>
-        Object.assign({}, seg, { config: Object.assign({}, seg.config, { audio }) })
+        Object.assign({}, seg, { config: Object.assign({}, seg.config, { audio }, tablaFill) })
       )
     }), draft.lengthPreset);
     try {
@@ -26572,6 +26582,11 @@
     // the same effect (audio flags are pure playback mutes, so a regenerate picks
     // them up cleanly on the next scheduled pass). All default checked = un-muted.
     document.querySelectorAll('.maestro-practice-pill input').forEach(inp => {
+      inp.addEventListener('change', () => { writeShareHash(); if (activeBundle) onGenerate(); });
+    });
+    // Tabla fill boxes (Fill every / Fill length) are form-associated like the practice pills,
+    // so their change events also do NOT reach the #maestro-controls listener: wire them directly.
+    document.querySelectorAll('.maestro-tabla-fill input').forEach(inp => {
       inp.addEventListener('change', () => { writeShareHash(); if (activeBundle) onGenerate(); });
     });
     // View dropdown in the render stage — independent of exercise mode
