@@ -227,7 +227,9 @@ window._tunerUI = function(state, actions) {
                     ? window._tunerUtils.openStringInstrumentKey(info.arrangement)
                     : '';
                 const freqs = window._tunerUtils.offsetsToFreqs(sliced, isBass, instKey);
-                const tName = (typeof window.displayTuningName === 'function')
+                const tName = instKey === 'carnatic-mandolin-5'
+                    ? 'C# G# C# G# C#'
+                    : (typeof window.displayTuningName === 'function')
                     ? window.displayTuningName(null, sliced)
                     : window._tunerUtils.getTuningName(sliced);
 

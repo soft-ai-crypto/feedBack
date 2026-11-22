@@ -16777,7 +16777,7 @@
     // "BasslineKeys" arrangement would otherwise match `bass`).
     window.feedBackViz_highway_3d.matchesArrangement = function (songInfo) {
         const arr = (songInfo && songInfo.arrangement) || '';
-        return /\b(?:lead|rhythm|bass|combo|guitar)\b/i.test(arr);
+        return /\b(?:lead|rhythm|bass|combo|guitar)\b/i.test(arr) || /carnatic\s+mandolin/i.test(arr);
     };
 
     // No imperative register() call needed: feedBack#272 introduced the
