@@ -14530,6 +14530,45 @@
 
   function replaceCanvas() { const host = $('maestro-render-host'), old = $('maestro-canvas'), canvas = document.createElement('canvas'); canvas.id = 'maestro-canvas'; canvas.style.width = '100%'; canvas.style.height = '100%'; if (old && old.parentElement) old.replaceWith(canvas); else if (host) host.appendChild(canvas); const rect = (host || canvas).getBoundingClientRect(); canvas.width = Math.max(640, Math.round(rect.width || 1280)); canvas.height = Math.max(420, Math.round(rect.height || 720)); return canvas; }
   function stopAudio() { for (const n of audioNodes) { try { n.stop && n.stop(0); } catch {} try { n.disconnect && n.disconnect(); } catch {} } audioNodes = []; scheduledUntilCtx = 0; schedChartPos = 0; schedChunks = []; }
+  // Tanpura drone: ONE looping buffer on its own 'tanpura' bus, deliberately NOT in audioNodes,
+  // so stopAudio() (seek, loop re-anchor, live swap) never cuts it. Start/stop is driven by
+  // startPlayback / resumePlayback / pausePlayback / stopPlayback / endFiniteRun and the Tanpura box.
+  const TANPURA_FILES = { Cs: 'tanpura_Cs.wav' };
+  const TANPURA_FADE_IN = 2.0, TANPURA_FADE_OUT = 2.0;   // seconds; the one place to tune the tanpura fades
+  let tanpuraNode = null, tanpuraToken = 0;
+  function tanpuraWanted() { const el = document.getElementById('maestro-tanpura-on'); return !!(el && el.checked); }
+  function tanpuraFile() { const sel = document.getElementById('maestro-tanpura-key'); return TANPURA_FILES[(sel && sel.value) || 'Cs'] || null; }
+  function stopTanpura() {
+    tanpuraToken++;
+    const n = tanpuraNode; tanpuraNode = null;
+    if (!n) return;
+    try {
+      const t = n.src.context.currentTime;
+      n.gain.gain.cancelScheduledValues(t);
+      n.gain.gain.setValueAtTime(n.gain.gain.value, t);
+      n.gain.gain.linearRampToValueAtTime(0, t + TANPURA_FADE_OUT);
+      n.src.stop(t + TANPURA_FADE_OUT + 0.05);
+    } catch (_) {}
+    setTimeout(() => { try { n.src.disconnect(); n.gain.disconnect(); } catch (_) {} }, Math.round(TANPURA_FADE_OUT * 1000) + 300);
+  }
+  async function startTanpura() {
+    stopTanpura();
+    if (!tanpuraWanted()) return;
+    const file = tanpuraFile(); if (!file) return;
+    const token = ++tanpuraToken;
+    try {
+      await ensureSgBuffer(file);
+      const entry = sgBuffers[file];
+      if (token !== tanpuraToken || !playing || paused || !entry || entry.state !== 'ready' || !entry.buf) return;
+      const ctx = ensureAudioCtx();
+      const out = trackBus(ctx, 'tanpura');
+      const src = ctx.createBufferSource(); src.buffer = entry.buf; src.loop = true;
+      const g = ctx.createGain(); const t = ctx.currentTime;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(1, t + TANPURA_FADE_IN);
+      src.connect(g); g.connect(out); src.start(t);
+      tanpuraNode = { src, gain: g };
+    } catch (_) {}
+  }
 
   // ── Rolling-window loop scheduling ───────────────────────────────────────────
   // Audio is queued in ~SCHED_WINDOW_SECONDS chunks of chart time (never the
@@ -15766,6 +15805,7 @@
     currentPracticeTime = playStartChartTime;
     playAnchorChartTime = playStartChartTime;
     stopAudio();
+    stopTanpura();
     stopPitchTracker();
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     drawOnce();
@@ -16577,6 +16617,11 @@
         const send = ctx.createGain(); send.gain.value = 0.07;
         shelf.connect(send); send.connect(ensureSharedReverb(ctx, bus));
         bus.fx = bus.fx || {}; bus.fx.drums = { loShelf, hiShelf: shelf, comp, send };   // MIX_RECIPES handles
+      } else if (name === 'tanpura') {
+        // Tanpura drone: full range (no register carve, its fundamental sits below 180 Hz), dry, centred.
+        let out = g;
+        if (canPan) { const pan = mkPan(); g.connect(pan); out = pan; }
+        out.connect(groupOut); mkTap(out);
       } else if (name !== 'notes' && name !== 'click') {
         // MELODIC/BASS class (track-architecture stage 3): harmony/pad/bass AND any new
         // per-track comp bus. Bass gets a lowpass carve; every other melodic bus a highpass.
@@ -16641,6 +16686,7 @@
     { key:'pad',     label:'Keys',    backing:true,  instr:'melodic', pan:-0.18,          group:'band' },
     { key:'bass',    label:'Bass',    backing:true,  instr:'bass',    pan:-0.06,          group:'band' },
     { key:'drums',   label:'Drums',   backing:true,  kit:true,        pan:-0.1,           group:'band' },
+    { key:'tanpura', label:'Tanpura', backing:true,                  pan:0,              group:'band' },
     { key:'click',   label:'Click',   backing:false,                  pan:0,              group:'personal' },
   ];
   // Per-channel instrument options (Phase C — backing-voice selection lives here now,
@@ -16708,6 +16754,7 @@
     if (liveBus.has('pad')) band.push(fixed('pad'));
     if (liveBus.has('bass')) band.push(fixed('bass'));
     if (liveBus.has('drums')) band.push(fixed('drums'));
+    band.push(fixed('tanpura'));
     const personal = [fixed('notes'), fixed('click')];
     return { personal, band, prof };
   }
@@ -20421,11 +20468,12 @@
     scheduleCurrentPassAndAnchor(AUDIO_LOOKAHEAD_SECONDS);
     if (!rafId) rafId = requestAnimationFrame(tick);
     startPitchTracker(activeBundle); syncPlayButton(); refreshStatusFromState();
+    startTanpura();
   }
   // Stop returns the playhead to where playback last began (Logic Pro behaviour:
   // hit Play to instantly replay the same passage). The ⏮ button jumps to the
   // very start — Logic's "press Stop again to go to the top".
-  function stopPlayback() { sessionEnd(); playing = false; paused = false; _preRollUntil = 0; _wrapAnim = null; hideDownshiftChip(); if (_jamPending) jamPendingClear(); releaseWakeLock(); currentPracticeTime = playStartChartTime; playAnchorChartTime = playStartChartTime; stopAudio(); stopPitchTracker(); if (rafId) { cancelAnimationFrame(rafId); rafId = null; } drawOnce(); syncPlayButton(); refreshStatusFromState(); }
+  function stopPlayback() { sessionEnd(); playing = false; paused = false; _preRollUntil = 0; _wrapAnim = null; hideDownshiftChip(); if (_jamPending) jamPendingClear(); releaseWakeLock(); currentPracticeTime = playStartChartTime; playAnchorChartTime = playStartChartTime; stopAudio(); stopTanpura(); stopPitchTracker(); if (rafId) { cancelAnimationFrame(rafId); rafId = null; } drawOnce(); syncPlayButton(); refreshStatusFromState(); }
   // ── PR 2.1 · "Hear it" — audition the target phrase (Ear-Mode enabler) ───────
   // Ear Mode's foundation (docs/ear-mode.md): play the current exercise's NOTES as
   // audio, UNGRADED — no scorer, no session, no RAF clock. Just schedule the
@@ -20477,6 +20525,7 @@
     if (!playing || paused) return;
     paused = true; _pauseBeganMs = performance.now();
     stopAudio();
+    stopTanpura();
     releaseWakeLock();
     syncPlayButton(); refreshStatusFromState();
   }
@@ -20520,6 +20569,7 @@
     // ptOnPitch; pre-roll frames likewise (the player isn't expected to play the
     // runway — they're re-orienting to the count).
     syncPlayButton(); refreshStatusFromState();
+    startTanpura();
   }
   // Dedicated transport Stop (the button left of Play/Pause). Acts on a running
   // OR paused run; inert when already stopped (the button is disabled then).
@@ -26622,6 +26672,15 @@
     // so their change events also do NOT reach the #maestro-controls listener: wire them directly.
     document.querySelectorAll('.maestro-tabla-fill input, .maestro-tabla-fill select').forEach(inp => {
       inp.addEventListener('change', () => { writeShareHash(); if (activeBundle) onGenerate(); });
+    });
+    // Tanpura box and key: take effect at once while playing, no regenerate.
+    const tanpuraApply = () => {
+      if (tanpuraWanted()) { const f = tanpuraFile(); if (f) ensureSgBuffer(f); }   // preload so Play starts without a gap
+      if (playing && !paused) startTanpura(); else stopTanpura();
+    };
+    ['maestro-tanpura-on', 'maestro-tanpura-key'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', tanpuraApply);
     });
     // View dropdown in the render stage — independent of exercise mode
     $('maestro-view-select')?.addEventListener('change', (e) => onViewSwitch(e.target.value));

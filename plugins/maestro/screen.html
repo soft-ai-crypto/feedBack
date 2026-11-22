@@ -1269,6 +1269,19 @@
   .maestro-practice-pill input:checked + span { background: var(--vir-accent-soft); border-color: var(--vir-accent); color: #dbeafe; }
   .maestro-practice-pill input:checked + span::before { background: var(--vir-accent); }
   .maestro-practice-pill input:focus-visible + span { outline: 2px solid var(--vir-accent); outline-offset: 2px; }
+  .maestro-tanpura-pill { position: relative; display: inline-flex; align-items: center; cursor: pointer; user-select: none; }
+  .maestro-tanpura-pill input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+  .maestro-tanpura-pill span {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 9px; font-size: 11.5px; font-weight: 600; border-radius: 7px;
+    border: 1px solid var(--vir-border); background: var(--vir-inset); color: var(--vir-text-faint);
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .maestro-tanpura-pill span::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--vir-text-faint); transition: background 0.12s; }
+  .maestro-tanpura-pill:hover span { color: var(--vir-text-dim); border-color: #64748b; }
+  .maestro-tanpura-pill input:checked + span { background: var(--vir-accent-soft); border-color: var(--vir-accent); color: #dbeafe; }
+  .maestro-tanpura-pill input:checked + span::before { background: var(--vir-accent); }
+  .maestro-tanpura-pill input:focus-visible + span { outline: 2px solid var(--vir-accent); outline-offset: 2px; }
   .maestro-fill-pill { display: inline-flex; align-items: center; gap: 4px; user-select: none; }
   .maestro-fill-pill span {
     display: inline-flex; align-items: center; gap: 4px;
@@ -3402,6 +3415,18 @@
           <label class="maestro-fill-pill" title="Tabla fill: how long, in bars">
             <span>Fill length</span>
             <input type="number" form="maestro-controls" name="indianFillBars" value="1" style="width:3.2em">
+          </label>
+        </div>
+        <div class="maestro-practice-toggles maestro-tanpura" role="group" aria-label="Tanpura">
+          <label class="maestro-tanpura-pill" title="Tanpura drone">
+            <input type="checkbox" name="tanpuraOn" id="maestro-tanpura-on">
+            <span>Tanpura</span>
+          </label>
+          <label class="maestro-fill-pill" title="Tanpura key">
+            <span>Key</span>
+            <select name="tanpuraKey" id="maestro-tanpura-key">
+              <option value="Cs">C#</option>
+            </select>
           </label>
         </div>
         <!-- Shell hotkey buttons (each hotkey has a visible button + the ? cheat-sheet;
