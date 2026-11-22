@@ -14570,6 +14570,21 @@
     } catch (_) {}
   }
 
+  // Remember the Tanpura box and key across page loads (browser storage, same pattern as maestro.mixer).
+  function tanpuraSave() {
+    try { localStorage.setItem('maestro.tanpura', JSON.stringify({ on: tanpuraWanted(), key: (document.getElementById('maestro-tanpura-key') || {}).value || 'Cs' })); } catch (_) {}
+  }
+  function tanpuraLoad() {
+    try {
+      const s = JSON.parse(localStorage.getItem('maestro.tanpura') || 'null');
+      if (!s) return;
+      const on = document.getElementById('maestro-tanpura-on');
+      const sel = document.getElementById('maestro-tanpura-key');
+      if (on) on.checked = !!s.on;
+      if (sel && s.key && Array.from(sel.options).some(o => o.value === s.key)) sel.value = s.key;
+    } catch (_) {}
+  }
+
   // ── Rolling-window loop scheduling ───────────────────────────────────────────
   // Audio is queued in ~SCHED_WINDOW_SECONDS chunks of chart time (never the
   // whole chart at once — see the constant's comment). Chunk seams — including
@@ -26675,6 +26690,7 @@
     });
     // Tanpura box and key: take effect at once while playing, no regenerate.
     const tanpuraApply = () => {
+      tanpuraSave();
       if (tanpuraWanted()) { const f = tanpuraFile(); if (f) ensureSgBuffer(f); }   // preload so Play starts without a gap
       if (playing && !paused) startTanpura(); else stopTanpura();
     };
@@ -26886,6 +26902,7 @@
     $('maestro-start-cta')?.addEventListener('click', () => onPlayToggle());
     // Shell panels (M / P / [ / ?): visible buttons + the mixer's own controls.
     mixerLoad();
+    tanpuraLoad();
     $('maestro-mixer-btn')?.addEventListener('click', () => toggleMixer());
     // The header progress chip opens P (de-dups the old view-bar Progress button).
     const progChip = $('maestro-progress-strip');
